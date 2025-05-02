@@ -24,6 +24,7 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glViewport(0, 0, mode->width, mode->height);
     glfwSetFramebufferSizeCallback(window, resize_window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -39,6 +40,7 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
@@ -47,7 +49,11 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
+
+        boid.render();
+
         processKeyboardInputExit(window);
         glfwSwapBuffers(window);
     }

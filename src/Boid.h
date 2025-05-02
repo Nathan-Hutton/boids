@@ -12,23 +12,31 @@ class Boid
     public:
         Boid()
         {
-            constexpr float vertices[]
+            constexpr GLfloat vertices[]
             {
-                -0.5f, -0.5f, 0.0f,     // Bottom left
-                0.5f, -0.5f, 0.0f,      // Bottom right
+                -0.25f, -0.5f, 0.0f,    // Bottom left
+                0.25f, -0.5f, 0.0f,     // Bottom right
                 0.0f, 0.5f, 0.0f        // Middle top
             };
+
+            glGenVertexArrays(1, &m_VAO);
+            glBindVertexArray(m_VAO);
 
             GLuint VBO;
             glGenBuffers(1, &VBO);
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+            glEnableVertexAttribArray(0);
+
+            glBindVertexArray(0);
         }
 
         void render()
         {
             glBindVertexArray(m_VAO);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
     private:
