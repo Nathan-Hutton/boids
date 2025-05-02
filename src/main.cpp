@@ -1,11 +1,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-
 #include "ShaderHandler.h"
 #include "Input.h"
 #include "Boid.h"
+#include "Camera.h"
 
 int main()
 {
@@ -16,7 +16,7 @@ int main()
 
     GLFWmonitor* monitor { glfwGetPrimaryMonitor() };
     const GLFWvidmode* mode { glfwGetVideoMode(monitor) };
-    GLFWwindow* window { glfwCreateWindow(mode->width, mode->height, "Rigid-body", monitor, NULL) };
+    GLFWwindow* window { glfwCreateWindow(mode->width, mode->height, "Boids", monitor, NULL) };
     if (window == NULL)
     {
         std::cout << "Failed to create window\n";
@@ -40,12 +40,13 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
     Boid boid{};
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection));
 
     while (!glfwWindowShouldClose(window))
     {
