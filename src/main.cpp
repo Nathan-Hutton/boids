@@ -40,7 +40,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-    const GLuint shaderProgram{ compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
+    const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
     Boid boid{};
