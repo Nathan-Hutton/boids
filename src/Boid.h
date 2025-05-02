@@ -14,8 +14,8 @@ class Boid
         {
             constexpr GLfloat vertices[]
             {
-                -0.25f, -0.5f, 0.0f,    // Bottom left
-                0.25f, -0.5f, 0.0f,     // Bottom right
+                -0.2f, -0.5f, 0.0f,    // Bottom left
+                0.2f, -0.5f, 0.0f,     // Bottom right
                 0.0f, 0.5f, 0.0f        // Middle top
             };
 
