@@ -7,9 +7,6 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-GLuint rayCastingShader{};
-GLuint exitCoordsShader{};
-
 namespace 
 {
     std::string readFile(const std::string& filePath)
@@ -69,10 +66,9 @@ namespace
             glDeleteShader(shader);
     }
 
-    void compileShader(GLuint& shaderProgram, const std::vector<std::string>& shaderPaths)
+    GLuint compileShader(const std::vector<std::string>& shaderPaths)
     {
-        if (glIsProgram(shaderProgram))
-            glDeleteProgram(shaderProgram);
+        GLuint shaderProgram;
 
         const GLuint vertexShader{ createShader(shaderPaths[0], GL_VERTEX_SHADER) };
         const GLuint fragmentShader{ createShader(shaderPaths[1], GL_FRAGMENT_SHADER) };
@@ -81,7 +77,7 @@ namespace
         if (shaderPaths.size() == 2)
         {
             linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader});
-            return;
+            return shaderProgram;
         }
 
         // Vert, frag,and geometry shaders
@@ -89,7 +85,7 @@ namespace
         {
             const GLuint geometryShader{ createShader(shaderPaths[2], GL_GEOMETRY_SHADER) };
             linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, geometryShader});
-            return;
+            return shaderProgram;
         }
 
         // Since we'll have tessellation shaders if there's 4 or 5 shader paths, we'll just compile there here
@@ -101,15 +97,12 @@ namespace
         if (shaderPaths.size() == 4)
         {
             linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader});
-            return;
+            return shaderProgram;
         }
 
         const GLuint geometryShader{ createShader(shaderPaths[4], GL_GEOMETRY_SHADER) };
         linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader, geometryShader});
+        return shaderProgram;
     }
 }
 
-void compileShaders()
-{
-    //compileShader(rayCastingShader, std::vector<std::string>{"../shaders/volumeShaderRayCasting.vert", "../shaders/volumeShaderRayCasting.frag"});
-}

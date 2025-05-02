@@ -5,6 +5,7 @@
 
 #include "ShaderHandler.h"
 #include "Input.h"
+#include "Boid.h"
 
 int main()
 {
@@ -24,22 +25,25 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, resize_window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // So the cursor won't hit the edge of the screen and stop
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
-    // Query and load all OpenGL extensions allowed by your drivers
-    // Allows us to access features/extensions not in the core OpenGL specification
     if(glewInit() != GLEW_OK)
     {
         glfwDestroyWindow(window);
         glfwTerminate();
         throw std::runtime_error("Glew initialization failed");
     }
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-    compileShaders();
+
+    const GLuint shaderProgram{ compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
+    glUseProgram(shaderProgram);
+
+    Boid boid{};
 
     while (!glfwWindowShouldClose(window))
     {
