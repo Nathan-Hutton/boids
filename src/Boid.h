@@ -10,13 +10,15 @@
 class Boid
 {
     public:
-        Boid()
+        Boid(glm::vec3 pos=glm::vec3{0.0f})
         {
+            m_pos = pos;
+
             constexpr GLfloat vertices[]
             {
                 -0.2f, -0.5f, 0.0f,    // Bottom left
                 0.2f, -0.5f, 0.0f,     // Bottom right
-                0.0f, 0.5f, 0.0f        // Middle top
+                0.0f, 0.5f, 0.0f       // Middle top
             };
 
             glGenVertexArrays(1, &m_VAO);
@@ -33,6 +35,9 @@ class Boid
             glBindVertexArray(0);
         }
 
+        glm::vec3 getPos() const { return m_pos; }
+        void setPos(glm::vec3 pos) { m_pos = pos; }
+
         void render()
         {
             glBindVertexArray(m_VAO);
@@ -40,7 +45,7 @@ class Boid
         }
 
     private:
-        GLfloat m_rotation{};
-        glm::vec3 m_pos{};
+        GLfloat m_rotation{ 0.0f };
+        glm::vec3 m_pos{ 0.0f };
         GLuint m_VAO;
 };

@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include "ShaderHandler.h"
@@ -45,15 +46,21 @@ int main()
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
-    Boid boid{};
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection));
+    std::vector<Boid> boids;
+    boids.push_back({{5.0f, 0.0f, 0.0f}});
+    boids.push_back({{-5.0f, 0.0f, 0.0f}});
 
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
 
-        boid.render();
+        for (Boid& boid : boids)
+        {
+            const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, boid.getPos()) };
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+            boid.render();
+        }
 
         processKeyboardInputExit(window);
         glfwSwapBuffers(window);
