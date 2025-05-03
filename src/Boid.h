@@ -9,6 +9,8 @@ class Boid
 {
     public:
         static std::vector<Boid> boids;
+        static void init(float screenWidth, float screenHeight);
+        static void updateBoids(float deltaTime);
 
         Boid(glm::vec2 pos);
         void render() const;
@@ -22,4 +24,9 @@ class Boid
         GLfloat m_rotation{ 0.0f };
         glm::vec2 m_pos{ 0.0f };
         GLuint m_VAO;
+
+        static float triangleWidth;
+        static float triangleHeight;
+        static float radius;
+        static float visionAngle;
 };

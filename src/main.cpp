@@ -28,7 +28,8 @@ int main()
     glViewport(0, 0, mode->width, mode->height);
     glfwSetFramebufferSizeCallback(window, resize_window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    Camera::init(mode->width, mode->height);
+    Camera::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
+    Boid::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
 
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
@@ -61,6 +62,7 @@ int main()
         const GLfloat currentTime{ glfwGetTime() };
         const GLfloat deltaTime{ currentTime - lastUpdateTime };
         lastUpdateTime = currentTime;
+        Boid::updateBoids(deltaTime);
         for (const Boid& boid : Boid::boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
