@@ -28,6 +28,7 @@ int main()
     glViewport(0, 0, mode->width, mode->height);
     glfwSetFramebufferSizeCallback(window, resize_window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    Camera::init(mode->width, mode->height);
 
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
@@ -47,15 +48,15 @@ int main()
     glUseProgram(shaderProgram);
 
     std::vector<Boid> boids;
-    boids.push_back({{5.0f, 0.0f, 0.0f}});
-    boids.push_back({{-5.0f, 0.0f, 0.0f}});
+    boids.push_back(Boid{Camera::cameraCenter});
+    //boids.push_back(Boid{{-5.0f, 0.0f, 0.0f}});
 
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
 
-        for (Boid& boid : boids)
+        for (const Boid& boid : boids)
         {
             const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, boid.getPos()) };
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));

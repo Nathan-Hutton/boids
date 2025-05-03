@@ -2,23 +2,25 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 
-#include <iostream>
+#include "Camera.h"
 
 class Boid
 {
     public:
-        Boid(glm::vec3 pos=glm::vec3{0.0f})
+        Boid(glm::vec3 pos)
         {
             m_pos = pos;
 
-            constexpr GLfloat vertices[]
+            // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
+            const float triangleWidth{ Camera::width / 60.0f };
+            const float triangleHeight{ Camera::height / 60.0f };
+            const GLfloat vertices[]
             {
-                -0.2f, -0.5f, 0.0f,    // Bottom left
-                0.2f, -0.5f, 0.0f,     // Bottom right
-                0.0f, 0.5f, 0.0f       // Middle top
+                -triangleWidth / 2.0f, -triangleHeight, 0.0f,   // Bottom left
+                triangleWidth / 2.0f, -triangleHeight, 0.0f,    // Bottom right
+                0.0f, triangleHeight, 0.0f                      // Middle top
             };
 
             glGenVertexArrays(1, &m_VAO);
@@ -38,7 +40,7 @@ class Boid
         glm::vec3 getPos() const { return m_pos; }
         void setPos(glm::vec3 pos) { m_pos = pos; }
 
-        void render()
+        void render() const
         {
             glBindVertexArray(m_VAO);
             glDrawArrays(GL_TRIANGLES, 0, 3);

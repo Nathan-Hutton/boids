@@ -6,7 +6,11 @@
 
 namespace Camera
 {
-    const glm::mat4 view{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f }) };
-    const glm::mat4 projection{ glm::ortho(-17.5f, 17.5f, -17.5f, 17.5f, 0.1f, 100.0f) };
-    const glm::mat4 viewProjection{ projection * view };
+    extern glm::mat4 viewProjection;
+    extern glm::vec3 cameraCenter;
+    extern float width;
+    extern float height;
+    extern float aspectRatio;
+
+    void init(int width, int height);
 }
