@@ -8,22 +8,44 @@ float Boid::triangleHeight{};
 float Boid::radius{};
 float Boid::visionAngle{};
 
+namespace
+{
+    glm::vec2 rotate(const glm::vec2& v, float angle)
+    {
+        const float c{ glm::cos(angle) };
+        const float s{ glm::sin(angle) };
+        return glm::vec2
+        {
+            v.x * c - v.y * s,
+            v.x * s + v.y * c
+        };
+    }
+}
+
 void Boid::init(float screenWidth, float screenHeight)
 {
     triangleWidth = screenWidth / 220.0f;
     triangleHeight = screenHeight / 80.0f;
     radius = screenWidth / 25.0f;
-    visionAngle = 310.0f;
+    visionAngle = glm::radians(310.0f);
 }
 
 void Boid::updateBoids(float deltaTime)
 {
-    for (const Boid& boid : Boid::boids)
+    for (size_t i{ 0 }; i < boids.size(); ++i)
     {
-        std::cout << radius << '\n';
-        std::cout << triangleWidth << '\n';
-        std::cout << triangleHeight << '\n';
-        std::cout << '\n';
+        Boid& boid1{ boids[i] };
+        for (size_t j{ 1 }; j < boids.size(); ++j)
+        {
+            if (i == j) continue;
+            Boid& boid2{ boids[j] };
+
+            const glm::vec2 vecToOther{ boid2.m_pos - boid1.m_pos };
+            if (glm::length(vecToOther) > radius) continue;
+
+            const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
+            if (glm::dot(rotate(glm::vec2{ 0.0f, 1.0f}, boid1.m_rotation), dirToOther) < glm::cos(visionAngle / 2.0f)) continue;
+        }
     }
 }
 
@@ -34,9 +56,9 @@ Boid::Boid(glm::vec2 pos)
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
     const GLfloat vertices[]
     {
-        -triangleWidth, triangleHeight,   
-        triangleWidth, triangleHeight,    
-        0.0f, -triangleHeight                      
+        -triangleWidth, -triangleHeight,   
+        triangleWidth, -triangleHeight,    
+        0.0f, triangleHeight                      
     };
 
     glGenVertexArrays(1, &m_VAO);
