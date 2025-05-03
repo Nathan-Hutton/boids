@@ -9,7 +9,7 @@
 class Boid
 {
     public:
-        Boid(glm::vec3 pos)
+        Boid(glm::vec2 pos)
         {
             m_pos = pos;
 
@@ -18,9 +18,9 @@ class Boid
             const float triangleHeight{ Camera::height / 60.0f };
             const GLfloat vertices[]
             {
-                -triangleWidth / 2.0f, -triangleHeight, 0.0f,   // Bottom left
-                triangleWidth / 2.0f, -triangleHeight, 0.0f,    // Bottom right
-                0.0f, triangleHeight, 0.0f                      // Middle top
+                -triangleWidth / 2.0f, -triangleHeight,   // Bottom left
+                triangleWidth / 2.0f, -triangleHeight,    // Bottom right
+                0.0f, triangleHeight                      // Middle top
             };
 
             glGenVertexArrays(1, &m_VAO);
@@ -31,14 +31,14 @@ class Boid
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
             glEnableVertexAttribArray(0);
 
             glBindVertexArray(0);
         }
 
-        glm::vec3 getPos() const { return m_pos; }
-        void setPos(glm::vec3 pos) { m_pos = pos; }
+        glm::vec2 getPos() const { return m_pos; }
+        void setPos(glm::vec2 pos) { m_pos = pos; }
 
         void render() const
         {
@@ -48,6 +48,6 @@ class Boid
 
     private:
         GLfloat m_rotation{ 0.0f };
-        glm::vec3 m_pos{ 0.0f };
+        glm::vec2 m_pos{ 0.0f };
         GLuint m_VAO;
 };

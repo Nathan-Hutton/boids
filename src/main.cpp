@@ -57,11 +57,11 @@ int main()
 
         double xCursorPos, yCursorPos;
         if (processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            boids.push_back(Boid{{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos), 0.0f}});
+            boids.push_back(Boid{{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos)}});
 
         for (const Boid& boid : boids)
         {
-            const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, boid.getPos()) };
+            const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             boid.render();
         }

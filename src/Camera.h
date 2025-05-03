@@ -7,10 +7,9 @@
 namespace Camera
 {
     extern glm::mat4 viewProjection;
-    extern glm::vec3 cameraCenter;
+    extern glm::vec2 cameraCenter;
     extern float width;
     extern float height;
-    extern float aspectRatio;
 
     void init(int width, int height);
 }
