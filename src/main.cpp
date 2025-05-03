@@ -49,12 +49,15 @@ int main()
 
     std::vector<Boid> boids;
     boids.push_back(Boid{Camera::cameraCenter});
-    //boids.push_back(Boid{{-5.0f, 0.0f, 0.0f}});
 
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
+
+        double xCursorPos, yCursorPos;
+        if (processMouseInputClicking(window, &xCursorPos, &yCursorPos))
+            boids.push_back(Boid{{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos), 0.0f}});
 
         for (const Boid& boid : boids)
         {
