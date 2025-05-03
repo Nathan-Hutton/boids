@@ -47,9 +47,7 @@ int main()
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
-    std::vector<Boid> boids;
-    boids.push_back(Boid{Camera::cameraCenter});
-
+    GLfloat lastUpdateTime{ static_cast<GLfloat>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -57,11 +55,16 @@ int main()
 
         double xCursorPos, yCursorPos;
         if (processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            boids.push_back(Boid{{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos)}});
+            Boid::boids.emplace_back(glm::vec2{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos)});
 
-        for (const Boid& boid : boids)
+        // Handle boids
+        const GLfloat currentTime{ glfwGetTime() };
+        const GLfloat deltaTime{ currentTime - lastUpdateTime };
+        lastUpdateTime = currentTime;
+        for (const Boid& boid : Boid::boids)
         {
-            const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            model = glm::rotate(model, glm::radians(boid.getRotation()), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             boid.render();
         }
