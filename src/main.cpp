@@ -2,7 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
+
 #include "ShaderHandler.h"
 #include "Input.h"
 #include "Boid.h"
@@ -66,7 +68,7 @@ int main()
         for (const Boid& boid : Boid::boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
-            model = glm::rotate(model, glm::radians(boid.getRotation()), glm::vec3{ 0.0f, 0.0f, 1.0f });
+            model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             boid.render();
         }

@@ -1,4 +1,6 @@
 #include "Boid.h"
+
+#include <random>
 #include <vector>
 #include <iostream>
 
@@ -6,7 +8,7 @@ std::vector<Boid> Boid::boids{};
 float Boid::triangleWidth{};
 float Boid::triangleHeight{};
 float Boid::radius{};
-float Boid::visionAngle{};
+float Boid::visionAngleCos{};
 
 namespace
 {
@@ -27,24 +29,25 @@ void Boid::init(float screenWidth, float screenHeight)
     triangleWidth = screenWidth / 220.0f;
     triangleHeight = screenHeight / 80.0f;
     radius = screenWidth / 25.0f;
-    visionAngle = glm::radians(310.0f);
+    visionAngleCos = glm::cos(glm::radians(270.0f) / 2.0f);
 }
 
 void Boid::updateBoids(float deltaTime)
 {
+    // First, we filter out the neighboring boids that aren't actually neighbors (must be within radius and vision angle/cone)
     for (size_t i{ 0 }; i < boids.size(); ++i)
     {
-        Boid& boid1{ boids[i] };
-        for (size_t j{ 1 }; j < boids.size(); ++j)
+        Boid& boid{ boids[i] };
+        for (size_t j{ 0 }; j < boids.size(); ++j)
         {
             if (i == j) continue;
-            Boid& boid2{ boids[j] };
+            const Boid& neighborBoid{ boids[j] };
 
-            const glm::vec2 vecToOther{ boid2.m_pos - boid1.m_pos };
-            if (glm::length(vecToOther) > radius) continue;
+            const glm::vec2 vecToOther{ neighborBoid.m_pos - boid.m_pos };
+            if (glm::length(vecToOther) > radius || glm::length(vecToOther) < 1e-6) continue;
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
-            if (glm::dot(rotate(glm::vec2{ 0.0f, 1.0f}, boid1.m_rotation), dirToOther) < glm::cos(visionAngle / 2.0f)) continue;
+            if (glm::dot(rotate(glm::vec2{ 0.0f, 1.0f}, boid.m_rotation), dirToOther) < visionAngleCos) continue;
         }
     }
 }
@@ -52,6 +55,12 @@ void Boid::updateBoids(float deltaTime)
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> dist(-179.0f, 180.0f);
+        m_rotation = glm::radians(dist(gen));
+    }
 
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
     const GLfloat vertices[]

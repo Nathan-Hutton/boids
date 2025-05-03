@@ -28,5 +28,5 @@ class Boid
         static float triangleWidth;
         static float triangleHeight;
         static float radius;
-        static float visionAngle;
+        static float visionAngleCos;
 };
