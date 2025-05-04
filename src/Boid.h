@@ -8,7 +8,7 @@
 class Boid
 {
     public:
-        static std::vector<Boid> boids;
+        static std::vector<Boid> s_boids;
         static void init(float screenWidth, float screenHeight);
         static void updateBoids(float deltaTime);
         static void createBoid(glm::vec2 pos);
@@ -25,8 +25,9 @@ class Boid
         glm::vec2 m_velocity{ 0.0f };
         GLuint m_VAO;
 
-        static float triangleWidth;
-        static float triangleHeight;
-        static float radius;
-        static float visionAngleCos;
+        static float s_maxSpeed;
+        static float s_triangleWidth;
+        static float s_triangleHeight;
+        static float s_radius;
+        static float s_visionAngleCos;
 };

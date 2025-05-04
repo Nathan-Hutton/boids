@@ -65,7 +65,7 @@ int main()
         const float deltaTime{ currentTime - lastUpdateTime };
         lastUpdateTime = currentTime;
         Boid::updateBoids(deltaTime);
-        for (const Boid& boid : Boid::boids)
+        for (const Boid& boid : Boid::s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
