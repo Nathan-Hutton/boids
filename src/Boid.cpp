@@ -38,6 +38,7 @@ void Boid::updateBoids(float deltaTime)
     for (size_t i{ 0 }; i < boids.size(); ++i)
     {
         Boid& boid{ boids[i] };
+        const glm::vec2 heading{ rotate(glm::vec2{ 0.0f, 1.0f }, boid.m_rotation) };
         for (size_t j{ 0 }; j < boids.size(); ++j)
         {
             if (i == j) continue;
@@ -47,8 +48,9 @@ void Boid::updateBoids(float deltaTime)
             if (glm::length(vecToOther) > radius || glm::length(vecToOther) < 1e-6) continue;
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
-            if (glm::dot(rotate(glm::vec2{ 0.0f, 1.0f}, boid.m_rotation), dirToOther) < visionAngleCos) continue;
+            if (glm::dot(heading, dirToOther) < visionAngleCos) continue;
         }
+        boid.m_pos += heading * boid.m_speed * deltaTime;
     }
 }
 
@@ -60,6 +62,9 @@ Boid::Boid(glm::vec2 pos)
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> dist(-179.0f, 180.0f);
         m_rotation = glm::radians(dist(gen));
+
+        dist = std::uniform_real_distribution<float>{radius / 2.0f, radius * 2.0f}; // I'm using radius since it's already scaled to the screen size
+        m_speed = dist(gen);
     }
 
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)

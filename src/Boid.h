@@ -23,6 +23,7 @@ class Boid
     private:
         GLfloat m_rotation{ 0.0f };
         glm::vec2 m_pos{ 0.0f };
+        float m_speed{ 0.0f };
         GLuint m_VAO;
 
         static float triangleWidth;

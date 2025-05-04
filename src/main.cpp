@@ -50,7 +50,7 @@ int main()
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
-    GLfloat lastUpdateTime{ static_cast<GLfloat>(glfwGetTime()) };
+    float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -61,8 +61,8 @@ int main()
             Boid::boids.emplace_back(glm::vec2{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos)});
 
         // Handle boids
-        const GLfloat currentTime{ glfwGetTime() };
-        const GLfloat deltaTime{ currentTime - lastUpdateTime };
+        const float currentTime{ static_cast<float>(glfwGetTime()) };
+        const float deltaTime{ currentTime - lastUpdateTime };
         lastUpdateTime = currentTime;
         Boid::updateBoids(deltaTime);
         for (const Boid& boid : Boid::boids)
