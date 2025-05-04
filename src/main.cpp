@@ -58,7 +58,7 @@ int main()
 
         double xCursorPos, yCursorPos;
         if (processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            Boid::boids.emplace_back(glm::vec2{static_cast<float>(xCursorPos), static_cast<float>(yCursorPos)});
+            Boid::createBoid({xCursorPos, yCursorPos});
 
         // Handle boids
         const float currentTime{ static_cast<float>(glfwGetTime()) };

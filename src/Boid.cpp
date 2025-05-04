@@ -1,4 +1,5 @@
 #include "Boid.h"
+#include "Camera.h"
 
 #include <random>
 #include <vector>
@@ -10,19 +11,19 @@ float Boid::triangleHeight{};
 float Boid::radius{};
 float Boid::visionAngleCos{};
 
-namespace
-{
-    glm::vec2 rotate(const glm::vec2& v, float angle)
-    {
-        const float c{ glm::cos(angle) };
-        const float s{ glm::sin(angle) };
-        return glm::vec2
-        {
-            v.x * c - v.y * s,
-            v.x * s + v.y * c
-        };
-    }
-}
+//namespace
+//{
+//    glm::vec2 rotate(const glm::vec2& v, float angle)
+//    {
+//        const float c{ glm::cos(angle) };
+//        const float s{ glm::sin(angle) };
+//        return glm::vec2
+//        {
+//            v.x * c - v.y * s,
+//            v.x * s + v.y * c
+//        };
+//    }
+//}
 
 void Boid::init(float screenWidth, float screenHeight)
 {
@@ -44,7 +45,12 @@ void Boid::updateBoids(float deltaTime)
             if (i == j) continue;
             const Boid& otherBoid{ boids[j] };
 
-            const glm::vec2 vecToOther{ otherBoid.m_pos - boid.m_pos };
+            glm::vec2 vecToOther{ otherBoid.m_pos - boid.m_pos };
+            if (std::abs(vecToOther.x) > Camera::screenWidth / 2.0f)
+                vecToOther.x -= glm::sign(vecToOther.x) * Camera::screenWidth;
+            if (std::abs(vecToOther.y) > Camera::screenHeight / 2.0f)
+                vecToOther.y -= glm::sign(vecToOther.y) * Camera::screenHeight;
+
             if (glm::length(vecToOther) > radius || glm::length(vecToOther) < 1e-6) continue;
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
@@ -52,7 +58,20 @@ void Boid::updateBoids(float deltaTime)
         }
 
         boid.m_pos += boid.m_velocity * deltaTime;
+        if (boid.m_pos.y - triangleHeight > Camera::screenHeight)
+            boid.m_pos.y -= Camera::screenHeight;
+        if (boid.m_pos.y + triangleHeight < 0)
+            boid.m_pos.y += Camera::screenHeight;
+        if (boid.m_pos.x - triangleHeight > Camera::screenWidth)
+            boid.m_pos.x -= Camera::screenWidth;
+        if (boid.m_pos.x + triangleHeight < 0)
+            boid.m_pos.x += Camera::screenWidth;
     }
+}
+
+void Boid::createBoid(glm::vec2 pos)
+{
+    boids.emplace_back(pos);
 }
 
 Boid::Boid(glm::vec2 pos)

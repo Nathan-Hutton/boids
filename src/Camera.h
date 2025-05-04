@@ -8,6 +8,8 @@ namespace Camera
 {
     extern glm::mat4 viewProjection;
     extern glm::vec2 cameraCenter;
+    extern float screenHeight;
+    extern float screenWidth;
 
     void init(float screenWidth, float screenHeight);
 }

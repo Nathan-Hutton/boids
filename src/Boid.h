@@ -11,6 +11,7 @@ class Boid
         static std::vector<Boid> boids;
         static void init(float screenWidth, float screenHeight);
         static void updateBoids(float deltaTime);
+        static void createBoid(glm::vec2 pos);
 
         Boid(glm::vec2 pos);
         void render() const;

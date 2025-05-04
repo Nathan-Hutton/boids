@@ -7,9 +7,13 @@ namespace Camera
 {
     glm::mat4 viewProjection{ 1.0f };
     glm::vec2 cameraCenter{ 0.0f };
+    float screenWidth{ 0.0f };
+    float screenHeight{ 0.0f };
     
     void init(float screenWidth, float screenHeight)
     {
+        Camera::screenWidth = screenWidth;
+        Camera::screenHeight = screenHeight;
         cameraCenter = glm::vec2{ screenWidth / 2.0f, screenHeight / 2.0f };
 
         const glm::mat4 view{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f }) };
