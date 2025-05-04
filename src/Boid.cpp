@@ -38,7 +38,6 @@ void Boid::updateBoids(float deltaTime)
     for (size_t i{ 0 }; i < boids.size(); ++i)
     {
         Boid& boid{ boids[i] };
-        //const glm::vec2 heading{ rotate(glm::vec2{ 0.0f, 1.0f }, boid.m_rotation) };
 
         for (size_t j{ 0 }; j < boids.size(); ++j)
         {
@@ -60,10 +59,15 @@ Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
     {
+        // Get a random velocity direction
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> dist{-radius * 2.0f, radius * 2.0f}; // I'm using radius since it's already scaled to the screen size
-        m_velocity = glm::vec2{ dist(gen), dist(gen) };
+        std::uniform_real_distribution<float> dist{-1.0f, 1.0f}; // I'm using radius since it's already scaled to the screen size
+        m_velocity = glm::normalize(glm::vec2{ dist(gen), dist(gen) });
+
+        // Set a random speed for the velocity
+        dist = std::uniform_real_distribution<float>{radius / 2.0f, radius * 4.0f};
+        m_velocity = m_velocity * dist(gen);
     }
 
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
