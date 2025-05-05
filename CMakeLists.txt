@@ -40,7 +40,23 @@ find_package(OpenGL REQUIRED)
 
 # Add executable
 file(GLOB SOURCES "src/*.cpp")
-add_executable(main ${SOURCES})
+
+# Add ImGui source files
+set(IMGUI_SRC
+    imgui/imgui.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_widgets.cpp
+    imgui/imgui_tables.cpp
+    imgui/backends/imgui_impl_glfw.cpp
+    imgui/backends/imgui_impl_opengl3.cpp
+)
+
+add_executable(main ${SOURCES} ${IMGUI_SRC})
+
+target_include_directories(main PRIVATE
+    imgui
+    imgui/backends
+)
 
 # Link libraries
 target_link_libraries(main glfw GLEW ${OPENGL_LIBRARIES})

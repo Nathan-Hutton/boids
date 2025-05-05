@@ -3,6 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <iostream>
 
 #include "ShaderHandler.h"
@@ -42,6 +46,13 @@ int main()
         throw std::runtime_error("Glew initialization failed");
     }
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
@@ -54,11 +65,16 @@ int main()
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         double xCursorPos, yCursorPos;
-        if (processMouseInputClicking(window, &xCursorPos, &yCursorPos))
+        ImGuiIO& io{ ImGui::GetIO() };
+        if (!io.WantCaptureMouse && processMouseInputClicking(window, &xCursorPos, &yCursorPos))
             Boid::createBoid({xCursorPos, yCursorPos});
 
         // Handle boids
@@ -74,8 +90,20 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
+        ImGui::Begin("My Window");
+        ImGui::Text("Hello, world!");
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         processKeyboardInputExit(window);
         glfwSwapBuffers(window);
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     return 0;
 }
