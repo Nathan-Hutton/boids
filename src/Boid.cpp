@@ -10,11 +10,20 @@ float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
 
 float Boid::s_maxSpeed{};
+float Boid::s_minSpeed{};
 float Boid::s_maxSteeringMagnitude{};
+float Boid::s_minSteeringMagnitude{};
 float Boid::s_alignmentScale{ 5.0f };
 
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
+
+namespace
+{
+    std::random_device rd;
+    std::mt19937 randomNumberGenerator{rd()};
+    std::uniform_real_distribution<float> speedDistribution{};
+}
 
 void Boid::init(float screenWidth, float screenHeight)
 {
@@ -25,7 +34,11 @@ void Boid::init(float screenWidth, float screenHeight)
     s_visionAngleCos = glm::cos(glm::radians(270.0f) / 2.0f);
 
     s_maxSpeed = screenWidth / 6.5f;
-    s_maxSteeringMagnitude = screenWidth / 4.5f;
+    s_minSpeed = screenWidth / 14.5f;
+    s_maxSteeringMagnitude = screenWidth / 2.5f;
+    s_minSteeringMagnitude = screenWidth / 3.5f;
+
+    speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed, s_maxSpeed};
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -41,6 +54,7 @@ void Boid::updateBoids(float deltaTime)
         int numVisibleBoids{ 0 }; // Including the primary boid itself
         glm::vec2 avgNeighborVelocity{ 0.0f };
 
+        glm::vec2 steeringForce{ 0.0f };
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
@@ -64,15 +78,32 @@ void Boid::updateBoids(float deltaTime)
 
         if (numVisibleBoids > 0)
         {
+            // *********
+            // Alignment
+            // *********
             avgNeighborVelocity /= numVisibleBoids;
 
-            glm::vec2 steeringForce{ avgNeighborVelocity - primaryBoid.m_velocity };
-            const float len{ glm::length(steeringForce) };
-            if (len > s_maxSteeringMagnitude)
-                steeringForce *= (s_maxSteeringMagnitude / len);
-
-            updatedVelocity = glm::normalize(primaryBoid.m_velocity + steeringForce * s_alignmentScale * deltaTime) * s_maxSpeed;
+            steeringForce += avgNeighborVelocity - primaryBoid.m_velocity;
+            steeringForce *= s_alignmentScale;
         }
+        else// Make steering force random
+            steeringForce = glm::vec2{ speedDistribution(randomNumberGenerator), speedDistribution(randomNumberGenerator) };
+
+        // Min/Max clamp for steering force
+        const float steeringMagnitude{ glm::length(steeringForce) };
+        if (steeringMagnitude > s_maxSteeringMagnitude)
+            steeringForce *= s_maxSteeringMagnitude / steeringMagnitude;
+        else if (steeringMagnitude < s_minSteeringMagnitude)
+            steeringForce *= s_minSteeringMagnitude / steeringMagnitude;
+
+        updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
+
+        // Min/Max clamp for velocity
+        const float velocityMagnitude{ glm::length(updatedVelocity) };
+        if (velocityMagnitude > s_maxSpeed)
+            updatedVelocity *= s_maxSpeed / velocityMagnitude;
+        else if (velocityMagnitude < s_minSpeed)
+            updatedVelocity *= s_minSpeed / velocityMagnitude;
 
         updatedVelocities[i] = updatedVelocity;
     }
@@ -84,13 +115,13 @@ void Boid::updateBoids(float deltaTime)
         boid.m_velocity = updatedVelocities[i];
         boid.m_pos += boid.m_velocity * deltaTime;
         if (boid.m_pos.y - s_triangleHeight > Camera::screenHeight)
-            boid.m_pos.y -= Camera::screenHeight;
+            boid.m_pos.y -= Camera::screenHeight + s_triangleHeight;
         if (boid.m_pos.y + s_triangleHeight < 0)
-            boid.m_pos.y += Camera::screenHeight;
+            boid.m_pos.y += Camera::screenHeight + s_triangleHeight;
         if (boid.m_pos.x - s_triangleHeight > Camera::screenWidth)
-            boid.m_pos.x -= Camera::screenWidth;
+            boid.m_pos.x -= Camera::screenWidth + s_triangleHeight;
         if (boid.m_pos.x + s_triangleHeight < 0)
-            boid.m_pos.x += Camera::screenWidth;
+            boid.m_pos.x += Camera::screenWidth + s_triangleHeight;
     }
 }
 
@@ -102,17 +133,7 @@ void Boid::createBoid(glm::vec2 pos)
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
-    {
-        // Get a random velocity direction
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> dist{-1.0f, 1.0f}; // I'm using radius since it's already scaled to the screen size
-        m_velocity = glm::normalize(glm::vec2{ dist(gen), dist(gen) });
-
-        // Set a random speed for the velocity
-        dist = std::uniform_real_distribution<float>{s_maxSpeed / 3.0f, s_maxSpeed};
-        m_velocity = m_velocity * dist(gen);
-    }
+    m_velocity = glm::vec2{ speedDistribution(randomNumberGenerator), speedDistribution(randomNumberGenerator) };
 
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
     const GLfloat vertices[]

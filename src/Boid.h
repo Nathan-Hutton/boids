@@ -29,7 +29,9 @@ class Boid
         static float s_triangleHeight;
 
         static float s_maxSpeed;
+        static float s_minSpeed;
         static float s_maxSteeringMagnitude;
+        static float s_minSteeringMagnitude;
         static float s_alignmentScale;
 
         static float s_radius;
