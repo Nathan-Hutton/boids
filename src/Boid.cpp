@@ -30,23 +30,23 @@ namespace rd
 
 namespace imguiScalars
 {
-    float radiusScale{ 0.05f };
-    float visionAngleDegrees{ 1.0f };
-    float maxSpeedScalar{ 1.0f };
-    float minSpeedScalar{ 1.0f };
-    float maxSteeringMagnitudeScalar{ 1.0f };
-    float minSteeringMagnitudeScalar{ 1.0f };
+    float radiusScale{ 1.0f / 20.0f };
+    float visionAngleDegrees{ 270.0f };
+    float maxSpeedScale{ 1.0f / 6.0f };
+    float minSpeedScale{ 1.0f / 14.0f };
+    float maxSteeringMagnitudeScale{ 0.4f };
+    float minSteeringMagnitudeScale{ 1.0f / 3.5f };
 }
 
 void Boid::recomputeStaticParams()
 {
     s_radius = Camera::screenWidth * imguiScalars::radiusScale;
-    s_visionAngleCos = glm::cos(glm::radians(270.0f) / 2.0f);
+    s_visionAngleCos = glm::cos(glm::radians(imguiScalars::visionAngleDegrees) / 2.0f);
 
-    s_maxSpeed = Camera::screenWidth / 6.5f;
-    s_minSpeed = Camera::screenWidth / 14.5f;
-    s_maxSteeringMagnitude = Camera::screenWidth / 2.5f;
-    s_minSteeringMagnitude = Camera::screenWidth / 3.5f;
+    s_maxSpeed = Camera::screenWidth * imguiScalars::maxSpeedScale;
+    s_minSpeed = Camera::screenWidth * imguiScalars::minSpeedScale;
+    s_maxSteeringMagnitude = Camera::screenWidth * imguiScalars::maxSteeringMagnitudeScale;
+    s_minSteeringMagnitude = Camera::screenWidth * imguiScalars::minSteeringMagnitudeScale;
 
     rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
 }
@@ -82,7 +82,12 @@ void Boid::init()
 void Boid::showImGuiControls()
 {
     bool changed{ false };
-    changed |= ImGui::SliderFloat("Radius scale", &imguiScalars::radiusScale, 0.005f, 0.5f);
+    changed |= ImGui::SliderFloat("Radius scale", &imguiScalars::radiusScale, 1.0f / 60.0f, 0.5f);
+    changed |= ImGui::SliderFloat("Vision angle (degrees)", &imguiScalars::visionAngleDegrees, 0.0f, 360.0f);
+    changed |= ImGui::SliderFloat("Max speed scale", &imguiScalars::maxSpeedScale, imguiScalars::minSpeedScale, 0.8f );
+    changed |= ImGui::SliderFloat("Min speed scale", &imguiScalars::minSpeedScale, 1.0f / 50.0f, imguiScalars::maxSpeedScale );
+    changed |= ImGui::SliderFloat("Max steering force scale", &imguiScalars::maxSteeringMagnitudeScale, imguiScalars::minSteeringMagnitudeScale, 2.0f );
+    changed |= ImGui::SliderFloat("Min steering force scale", &imguiScalars::minSteeringMagnitudeScale, 0.05f, imguiScalars::maxSteeringMagnitudeScale );
 
     if (changed)
         recomputeStaticParams();

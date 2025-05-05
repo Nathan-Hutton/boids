@@ -49,9 +49,10 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+    ImGui::GetIO().IniFilename = nullptr;
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -61,6 +62,7 @@ int main()
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
+    bool showSettingsUI{ false };
     glBindVertexArray(Boid::s_VAO);
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
@@ -90,9 +92,15 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
-        ImGui::Begin("Settings");
-        Boid::showImGuiControls();
-        ImGui::End();
+        if (processPressingF1Key(window))
+            showSettingsUI = !showSettingsUI;
+
+        if (showSettingsUI)
+        {
+            ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+            Boid::showImGuiControls();
+            ImGui::End();
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

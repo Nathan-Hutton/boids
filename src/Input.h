@@ -25,6 +25,23 @@ bool processMouseInputClicking(GLFWwindow* window, double* xCursorPos, double* y
     return true;
 }
 
+bool processPressingF1Key(GLFWwindow* window)
+{
+    static bool f1KeyPressed{ false };
+
+    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
+    {
+        if (f1KeyPressed)
+            return false;
+
+        f1KeyPressed = true;
+        return true;
+    }
+
+    f1KeyPressed = false;
+    return false;
+}
+
 void resize_window(GLFWwindow* window, int width, int height)
 {
     (void)window; // This just gets rid of the unused parameter warning
