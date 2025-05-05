@@ -38,7 +38,7 @@ void Boid::init(float screenWidth, float screenHeight)
     s_maxSteeringMagnitude = screenWidth / 2.5f;
     s_minSteeringMagnitude = screenWidth / 3.5f;
 
-    speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed, s_maxSpeed};
+    speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -49,12 +49,17 @@ void Boid::updateBoids(float deltaTime)
     for (size_t i{ 0 }; i < s_boids.size(); ++i)
     {
         Boid& primaryBoid{ s_boids[i] };
+        int numVisibleBoids{ 0 };
+        glm::vec2 steeringForce{ 0.0f };
+
+        // Alignment
+        glm::vec2 avgNeighborVelocity{ 0.0f };
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
-        int numVisibleBoids{ 0 }; // Including the primary boid itself
-        glm::vec2 avgNeighborVelocity{ 0.0f };
+        // Cohesion
 
-        glm::vec2 steeringForce{ 0.0f };
+        // Separation
+
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
@@ -87,7 +92,7 @@ void Boid::updateBoids(float deltaTime)
             steeringForce *= s_alignmentScale;
         }
         else// Make steering force random
-            steeringForce = glm::vec2{ speedDistribution(randomNumberGenerator), speedDistribution(randomNumberGenerator) };
+            steeringForce = glm::vec2{ speedDistribution(randomNumberGenerator) / 5.0f, speedDistribution(randomNumberGenerator) / 5.0f };
 
         // Min/Max clamp for steering force
         const float steeringMagnitude{ glm::length(steeringForce) };
