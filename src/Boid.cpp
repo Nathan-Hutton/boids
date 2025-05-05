@@ -6,9 +6,13 @@
 #include <iostream>
 
 std::vector<Boid> Boid::s_boids{};
-float Boid::s_maxSpeed{};
 float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
+
+float Boid::s_maxSpeed{};
+float Boid::s_maxSteeringMagnitude{};
+float Boid::s_alignmentScale{ 5.0f };
+
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
 
@@ -16,9 +20,12 @@ void Boid::init(float screenWidth, float screenHeight)
 {
     s_triangleWidth = screenWidth / 220.0f;
     s_triangleHeight = screenHeight / 80.0f;
-    s_radius = screenWidth / 25.0f;
+
+    s_radius = screenWidth / 20.0f;
     s_visionAngleCos = glm::cos(glm::radians(270.0f) / 2.0f);
-    s_maxSpeed = s_radius * 4.0f;
+
+    s_maxSpeed = screenWidth / 6.5f;
+    s_maxSteeringMagnitude = screenWidth / 4.5f;
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -58,8 +65,13 @@ void Boid::updateBoids(float deltaTime)
         if (numVisibleBoids > 0)
         {
             avgNeighborVelocity /= numVisibleBoids;
-            const glm::vec2 steeringForce{ avgNeighborVelocity - primaryBoid.m_velocity };
-            updatedVelocity = glm::normalize(primaryBoid.m_velocity + steeringForce) * s_maxSpeed;
+
+            glm::vec2 steeringForce{ avgNeighborVelocity - primaryBoid.m_velocity };
+            const float len{ glm::length(steeringForce) };
+            if (len > s_maxSteeringMagnitude)
+                steeringForce *= (s_maxSteeringMagnitude / len);
+
+            updatedVelocity = glm::normalize(primaryBoid.m_velocity + steeringForce * s_alignmentScale * deltaTime) * s_maxSpeed;
         }
 
         updatedVelocities[i] = updatedVelocity;
@@ -98,7 +110,7 @@ Boid::Boid(glm::vec2 pos)
         m_velocity = glm::normalize(glm::vec2{ dist(gen), dist(gen) });
 
         // Set a random speed for the velocity
-        dist = std::uniform_real_distribution<float>{s_radius / 2.0f, s_maxSpeed};
+        dist = std::uniform_real_distribution<float>{s_maxSpeed / 3.0f, s_maxSpeed};
         m_velocity = m_velocity * dist(gen);
     }
 

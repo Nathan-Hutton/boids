@@ -25,9 +25,13 @@ class Boid
         glm::vec2 m_velocity{ 0.0f };
         GLuint m_VAO;
 
-        static float s_maxSpeed;
         static float s_triangleWidth;
         static float s_triangleHeight;
+
+        static float s_maxSpeed;
+        static float s_maxSteeringMagnitude;
+        static float s_alignmentScale;
+
         static float s_radius;
         static float s_visionAngleCos;
 };
