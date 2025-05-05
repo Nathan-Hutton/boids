@@ -6,6 +6,7 @@
 #include <iostream>
 
 std::vector<Boid> Boid::s_boids{};
+GLuint Boid::s_VAO{};
 float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
 
@@ -39,6 +40,30 @@ void Boid::init(float screenWidth, float screenHeight)
     s_minSteeringMagnitude = screenWidth / 3.5f;
 
     speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
+
+    // ************
+    // OpenGL STUFF
+    // ************
+    // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
+    const GLfloat vertices[]
+    {
+        -s_triangleWidth, -s_triangleHeight,   
+        s_triangleWidth, -s_triangleHeight,    
+        0.0f, s_triangleHeight                      
+    };
+
+    glGenVertexArrays(1, &s_VAO);
+    glBindVertexArray(s_VAO);
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -57,6 +82,7 @@ void Boid::updateBoids(float deltaTime)
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
         // Cohesion
+
 
         // Separation
 
@@ -139,31 +165,4 @@ Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
     m_velocity = glm::vec2{ speedDistribution(randomNumberGenerator), speedDistribution(randomNumberGenerator) };
-
-    // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
-    const GLfloat vertices[]
-    {
-        -s_triangleWidth, -s_triangleHeight,   
-        s_triangleWidth, -s_triangleHeight,    
-        0.0f, s_triangleHeight                      
-    };
-
-    glGenVertexArrays(1, &m_VAO);
-    glBindVertexArray(m_VAO);
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
-}
-
-void Boid::render() const
-{
-    glBindVertexArray(m_VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
 }

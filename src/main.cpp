@@ -31,7 +31,6 @@ int main()
     glfwSetFramebufferSizeCallback(window, resize_window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     Camera::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
-    Boid::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
 
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
@@ -46,10 +45,12 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+    Boid::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
 
+    glBindVertexArray(Boid::s_VAO);
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
     {
@@ -70,7 +71,7 @@ int main()
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
-            boid.render();
+            glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
         processKeyboardInputExit(window);
