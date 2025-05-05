@@ -1,6 +1,8 @@
 #include "Boid.h"
 #include "Camera.h"
 
+#include "imgui.h"
+
 #include <random>
 #include <vector>
 #include <iostream>
@@ -19,31 +21,42 @@ float Boid::s_alignmentScale{ 5.0f };
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
 
-namespace
+namespace rd
 {
     std::random_device rd;
     std::mt19937 randomNumberGenerator{rd()};
     std::uniform_real_distribution<float> speedDistribution{};
 }
 
-void Boid::init(float screenWidth, float screenHeight)
+namespace imguiScalars
 {
-    s_triangleWidth = screenWidth / 220.0f;
-    s_triangleHeight = screenHeight / 80.0f;
+    float radiusScale{ 0.05f };
+    float visionAngleDegrees{ 1.0f };
+    float maxSpeedScalar{ 1.0f };
+    float minSpeedScalar{ 1.0f };
+    float maxSteeringMagnitudeScalar{ 1.0f };
+    float minSteeringMagnitudeScalar{ 1.0f };
+}
 
-    s_radius = screenWidth / 20.0f;
+void Boid::recomputeStaticParams()
+{
+    s_radius = Camera::screenWidth * imguiScalars::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(270.0f) / 2.0f);
 
-    s_maxSpeed = screenWidth / 6.5f;
-    s_minSpeed = screenWidth / 14.5f;
-    s_maxSteeringMagnitude = screenWidth / 2.5f;
-    s_minSteeringMagnitude = screenWidth / 3.5f;
+    s_maxSpeed = Camera::screenWidth / 6.5f;
+    s_minSpeed = Camera::screenWidth / 14.5f;
+    s_maxSteeringMagnitude = Camera::screenWidth / 2.5f;
+    s_minSteeringMagnitude = Camera::screenWidth / 3.5f;
 
-    speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
+    rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
+}
 
-    // ************
-    // OpenGL STUFF
-    // ************
+void Boid::init()
+{
+    s_triangleWidth = Camera::screenWidth / 220.0f;
+    s_triangleHeight = Camera::screenHeight / 80.0f;
+
+    recomputeStaticParams();
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
     const GLfloat vertices[]
     {
@@ -64,6 +77,15 @@ void Boid::init(float screenWidth, float screenHeight)
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
+}
+
+void Boid::showImGuiControls()
+{
+    bool changed{ false };
+    changed |= ImGui::SliderFloat("Radius scale", &imguiScalars::radiusScale, 0.005f, 0.5f);
+
+    if (changed)
+        recomputeStaticParams();
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -118,7 +140,7 @@ void Boid::updateBoids(float deltaTime)
             steeringForce *= s_alignmentScale;
         }
         else// Make steering force random
-            steeringForce = glm::vec2{ speedDistribution(randomNumberGenerator) / 5.0f, speedDistribution(randomNumberGenerator) / 5.0f };
+            steeringForce = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator) / 5.0f, rd::speedDistribution(rd::randomNumberGenerator) / 5.0f };
 
         // Min/Max clamp for steering force
         const float steeringMagnitude{ glm::length(steeringForce) };
@@ -164,5 +186,5 @@ void Boid::createBoid(glm::vec2 pos)
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
-    m_velocity = glm::vec2{ speedDistribution(randomNumberGenerator), speedDistribution(randomNumberGenerator) };
+    m_velocity = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator), rd::speedDistribution(rd::randomNumberGenerator) };
 }

@@ -56,7 +56,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-    Boid::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
+    Boid::init();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     const GLuint shaderProgram{ ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"}) };
     glUseProgram(shaderProgram);
@@ -90,8 +90,8 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
-        ImGui::Begin("My Window");
-        ImGui::Text("Hello, world!");
+        ImGui::Begin("Settings");
+        Boid::showImGuiControls();
         ImGui::End();
 
         ImGui::Render();

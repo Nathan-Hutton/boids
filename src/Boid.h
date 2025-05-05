@@ -10,7 +10,8 @@ class Boid
     public:
         static std::vector<Boid> s_boids;
         static GLuint s_VAO;
-        static void init(float screenWidth, float screenHeight);
+        static void init();
+        static void showImGuiControls();
         static void updateBoids(float deltaTime);
         static void createBoid(glm::vec2 pos);
 
@@ -34,4 +35,6 @@ class Boid
 
         static float s_radius;
         static float s_visionAngleCos;
+
+        static void recomputeStaticParams();
 };
