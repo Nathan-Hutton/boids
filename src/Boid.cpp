@@ -65,6 +65,7 @@ void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
     s_triangleHeight = Camera::screenHeight / 80.0f;
+    glPointSize(s_triangleWidth / 1.5f); // The points will show up at m_pos when we render the cones so we can see exactly where the boids are visible
     recomputeStaticParams();
 
     // Boid triangle VAO
@@ -233,7 +234,7 @@ void Boid::createBoid(glm::vec2 pos)
 void Boid::renderAllBoids()
 {
     // Remember that depth testing is off
-    // First, render the vision cones, then the outlines, then the boids themselves
+    // First, render the vision cones, then the outlines, then the boids themselves, and finally m_pos as points
     if (settings::visionCone::showVisionCones)
     {
         glBindVertexArray(settings::visionCone::VAO);
@@ -265,6 +266,21 @@ void Boid::renderAllBoids()
         model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
         glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    // Render m_pos as a point so we can see exactly where the boids are visible in a render cone
+    if (settings::visionCone::showVisionCones)
+    {
+        glBindVertexArray(settings::visionCone::VAO);
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 1.0f, 0.0f, 0.0f }));
+        for (const Boid& boid : s_boids)
+        {
+            glPointSize(s_triangleWidth / 1.5f);
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
+            glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+            glDrawArrays(GL_POINTS, 0, 1);
+        }
     }
 }
 
