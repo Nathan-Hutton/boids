@@ -65,9 +65,11 @@ namespace
     }
 }
 
+GLuint ShaderHandler::shaderProgram;
+
 GLuint ShaderHandler::compileShader(const std::vector<std::string>& shaderPaths)
 {
-    GLuint shaderProgram;
+    GLuint tempShaderProgram;
 
     const GLuint vertexShader{ createShader(shaderPaths[0], GL_VERTEX_SHADER) };
     const GLuint fragmentShader{ createShader(shaderPaths[1], GL_FRAGMENT_SHADER) };
@@ -75,16 +77,16 @@ GLuint ShaderHandler::compileShader(const std::vector<std::string>& shaderPaths)
     // Just vert and frag shaders
     if (shaderPaths.size() == 2)
     {
-        linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader});
-        return shaderProgram;
+        linkShaders(tempShaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader});
+        return tempShaderProgram;
     }
 
     // Vert, frag,and geometry shaders
     if (shaderPaths.size() == 3)
     {
         const GLuint geometryShader{ createShader(shaderPaths[2], GL_GEOMETRY_SHADER) };
-        linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, geometryShader});
-        return shaderProgram;
+        linkShaders(tempShaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, geometryShader});
+        return tempShaderProgram;
     }
 
     // Since we'll have tessellation shaders if there's 4 or 5 shader paths, we'll just compile there here
@@ -95,11 +97,11 @@ GLuint ShaderHandler::compileShader(const std::vector<std::string>& shaderPaths)
     // Vert, frag, and tessellation shaders
     if (shaderPaths.size() == 4)
     {
-        linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader});
-        return shaderProgram;
+        linkShaders(tempShaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader});
+        return tempShaderProgram;
     }
 
     const GLuint geometryShader{ createShader(shaderPaths[4], GL_GEOMETRY_SHADER) };
-    linkShaders(shaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader, geometryShader});
-    return shaderProgram;
+    linkShaders(tempShaderProgram, shaderPaths, std::vector<GLuint>{vertexShader, fragmentShader, tessellationCtrlShader, tessellationEvalShader, geometryShader});
+    return tempShaderProgram;
 }

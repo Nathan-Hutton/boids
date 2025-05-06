@@ -1,7 +1,10 @@
 #include "Boid.h"
 #include "Camera.h"
+#include "ShaderHandler.h"
 
 #include "imgui.h"
+
+#include <glm/gtc/type_ptr.hpp>
 
 #include <random>
 #include <vector>
@@ -227,16 +230,29 @@ void Boid::createBoid(glm::vec2 pos)
     s_boids.emplace_back(pos);
 }
 
-void Boid::renderBoid()
+void Boid::renderAllBoids()
 {
     if (settings::visionCone::showVisionCones)
     {
         glBindVertexArray(settings::visionCone::VAO);
-        glDrawArrays(GL_LINE_LOOP, 0, settings::visionCone::vertices.size());
+
+        for (const Boid& boid : s_boids)
+        {
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
+            glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+            glDrawArrays(GL_LINE_LOOP, 0, settings::visionCone::vertices.size());
+        }
     }
 
     glBindVertexArray(s_VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    for (const Boid& boid : s_boids)
+    {
+        glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+        model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
+        glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
 }
 
 Boid::Boid(glm::vec2 pos)
