@@ -15,9 +15,7 @@ float Boid::s_triangleHeight{};
 
 float Boid::s_maxSpeed{};
 float Boid::s_minSpeed{};
-float Boid::s_maxSteeringMagnitude{};
 float Boid::s_minSteeringMagnitude{};
-float Boid::s_alignmentScale{ 5.0f };
 
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
@@ -35,8 +33,9 @@ namespace ui
     float visionAngleDegrees{ 270.0f };
     float maxSpeedScale{ 1.0f / 6.0f };
     float minSpeedScale{ 1.0f / 14.0f };
-    float maxSteeringMagnitudeScale{ 0.4f };
-    float minSteeringMagnitudeScale{ 1.0f / 3.5f };
+    float minSteeringMagnitudeScale{ 1.0f / 8.5f };
+
+    float alignmentScale{ 5.0f };
 
     namespace visionCone
     {
@@ -53,7 +52,6 @@ void Boid::recomputeStaticParams()
 
     s_maxSpeed = Camera::screenWidth * ui::maxSpeedScale;
     s_minSpeed = Camera::screenWidth * ui::minSpeedScale;
-    s_maxSteeringMagnitude = Camera::screenWidth * ui::maxSteeringMagnitudeScale;
     s_minSteeringMagnitude = Camera::screenWidth * ui::minSteeringMagnitudeScale;
 
     rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
@@ -122,8 +120,9 @@ void Boid::showImGuiControls()
     changed |= ImGui::SliderFloat("Vision angle (degrees)", &ui::visionAngleDegrees, 0.0f, 360.0f);
     changed |= ImGui::SliderFloat("Max speed scale", &ui::maxSpeedScale, ui::minSpeedScale, 0.8f );
     changed |= ImGui::SliderFloat("Min speed scale", &ui::minSpeedScale, 1.0f / 50.0f, ui::maxSpeedScale );
-    changed |= ImGui::SliderFloat("Max steering force scale", &ui::maxSteeringMagnitudeScale, ui::minSteeringMagnitudeScale, 2.0f );
-    changed |= ImGui::SliderFloat("Min steering force scale", &ui::minSteeringMagnitudeScale, 0.05f, ui::maxSteeringMagnitudeScale );
+    changed |= ImGui::SliderFloat("Min steering force scale", &ui::minSteeringMagnitudeScale, 0.05f, 0.8f );
+
+    ImGui::SliderFloat("Alignment scale", &ui::alignmentScale, 0.0f, 20.0f);
 
     if (changed)
         recomputeStaticParams();
@@ -178,16 +177,18 @@ void Boid::updateBoids(float deltaTime)
             avgNeighborVelocity /= numVisibleBoids;
 
             steeringForce += avgNeighborVelocity - primaryBoid.m_velocity;
-            steeringForce *= s_alignmentScale;
+            steeringForce *= ui::alignmentScale;
         }
-        else// Make steering force random
-            steeringForce = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator) / 5.0f, rd::speedDistribution(rd::randomNumberGenerator) / 5.0f };
 
-        // Min/Max clamp for steering force
-        const float steeringMagnitude{ glm::length(steeringForce) };
-        if (steeringMagnitude > s_maxSteeringMagnitude)
-            steeringForce *= s_maxSteeringMagnitude / steeringMagnitude;
-        else if (steeringMagnitude < s_minSteeringMagnitude)
+        float steeringMagnitude{ glm::length(steeringForce) };
+        while (steeringMagnitude < 1e-6)
+        {
+            steeringForce = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator) / 5.0f, rd::speedDistribution(rd::randomNumberGenerator) / 5.0f };
+            steeringMagnitude = glm::length(steeringForce);
+        }
+
+        // Min clamp for steering force (so things don't move too slow)
+        if (steeringMagnitude < s_minSteeringMagnitude)
             steeringForce *= s_minSteeringMagnitude / steeringMagnitude;
 
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
