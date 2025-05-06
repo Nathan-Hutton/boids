@@ -232,10 +232,22 @@ void Boid::createBoid(glm::vec2 pos)
 
 void Boid::renderAllBoids()
 {
+    // Remember that depth testing is off
+    // First, render the vision cones, then the outlines, then the boids themselves
     if (settings::visionCone::showVisionCones)
     {
         glBindVertexArray(settings::visionCone::VAO);
 
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.1f, 0.1f, 0.1f }));
+        for (const Boid& boid : s_boids)
+        {
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
+            glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+            glDrawArrays(GL_TRIANGLE_FAN, 0, settings::visionCone::vertices.size());
+        }
+
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.35f, 0.35f, 0.35f }));
         for (const Boid& boid : s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
@@ -246,6 +258,7 @@ void Boid::renderAllBoids()
     }
 
     glBindVertexArray(s_VAO);
+    glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.0f, 1.0f, 1.0f }));
     for (const Boid& boid : s_boids)
     {
         glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
