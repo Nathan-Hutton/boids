@@ -27,7 +27,7 @@ namespace rd
     std::uniform_real_distribution<float> speedDistribution{};
 }
 
-namespace ui
+namespace settings
 {
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
@@ -39,6 +39,7 @@ namespace ui
 
     namespace visionCone
     {
+        bool showVisionCones{ false };
         GLuint VAO{};
         GLuint VBO{};
         std::array<GLfloat, 102> vertices{}; // So really 51 vertices (including middle)
@@ -47,12 +48,12 @@ namespace ui
 
 void Boid::recomputeStaticParams()
 {
-    s_radius = Camera::screenWidth * ui::radiusScale;
-    s_visionAngleCos = glm::cos(glm::radians(ui::visionAngleDegrees) / 2.0f);
+    s_radius = Camera::screenWidth * settings::radiusScale;
+    s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
-    s_maxSpeed = Camera::screenWidth * ui::maxSpeedScale;
-    s_minSpeed = Camera::screenWidth * ui::minSpeedScale;
-    s_minSteeringMagnitude = Camera::screenWidth * ui::minSteeringMagnitudeScale;
+    s_maxSpeed = Camera::screenWidth * settings::maxSpeedScale;
+    s_minSpeed = Camera::screenWidth * settings::minSpeedScale;
+    s_minSteeringMagnitude = Camera::screenWidth * settings::minSteeringMagnitudeScale;
 
     rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
 }
@@ -86,26 +87,26 @@ void Boid::init()
     glBindVertexArray(0);
 
     // Boid vision cone/circle VAO
-    ui::visionCone::vertices[0] = 0.0f;
-    ui::visionCone::vertices[1] = 0.0f;
+    settings::visionCone::vertices[0] = 0.0f;
+    settings::visionCone::vertices[1] = 0.0f;
 
-    const GLfloat stepSize{ glm::radians(ui::visionAngleDegrees / (static_cast<float>(ui::visionCone::vertices.size() / 2) - 1.0f)) };
-    const GLfloat startAngle{ glm::radians(((360.0f - ui::visionAngleDegrees) / 2.0f) - 90.0f) };
+    const GLfloat stepSize{ glm::radians(settings::visionAngleDegrees / (static_cast<float>(settings::visionCone::vertices.size() / 2) - 1.0f)) };
+    const GLfloat startAngle{ glm::radians(((360.0f - settings::visionAngleDegrees) / 2.0f) - 90.0f) };
     size_t index{ 2 };
-    for (size_t i{ 0 }; i < (ui::visionCone::vertices.size() - 2) / 2; ++i)
+    for (size_t i{ 0 }; i < (settings::visionCone::vertices.size() - 2) / 2; ++i)
     {
         const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
         const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
-        ui::visionCone::vertices[index++] = x;
-        ui::visionCone::vertices[index++] = y;
+        settings::visionCone::vertices[index++] = x;
+        settings::visionCone::vertices[index++] = y;
     }
 
-    glGenVertexArrays(1, &ui::visionCone::VAO);
-    glBindVertexArray(ui::visionCone::VAO);
+    glGenVertexArrays(1, &settings::visionCone::VAO);
+    glBindVertexArray(settings::visionCone::VAO);
 
-    glGenBuffers(1, &ui::visionCone::VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, ui::visionCone::VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(ui::visionCone::vertices), ui::visionCone::vertices.data(), GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &settings::visionCone::VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, settings::visionCone::VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(settings::visionCone::vertices), settings::visionCone::vertices.data(), GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
@@ -116,13 +117,14 @@ void Boid::init()
 void Boid::showImGuiControls()
 {
     bool changed{ false };
-    changed |= ImGui::SliderFloat("Radius scale", &ui::radiusScale, 0.0f, 0.3f);
-    changed |= ImGui::SliderFloat("Vision angle (degrees)", &ui::visionAngleDegrees, 0.0f, 360.0f);
-    changed |= ImGui::SliderFloat("Max speed scale", &ui::maxSpeedScale, ui::minSpeedScale, 0.8f );
-    changed |= ImGui::SliderFloat("Min speed scale", &ui::minSpeedScale, 1.0f / 50.0f, ui::maxSpeedScale );
-    changed |= ImGui::SliderFloat("Min steering force scale", &ui::minSteeringMagnitudeScale, 0.05f, 0.8f );
+    changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 0.3f);
+    changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
+    changed |= ImGui::SliderFloat("Max speed scale", &settings::maxSpeedScale, settings::minSpeedScale, 0.8f );
+    changed |= ImGui::SliderFloat("Min speed scale", &settings::minSpeedScale, 1.0f / 50.0f, settings::maxSpeedScale );
+    changed |= ImGui::SliderFloat("Min steering force scale", &settings::minSteeringMagnitudeScale, 0.05f, 0.8f );
 
-    ImGui::SliderFloat("Alignment scale", &ui::alignmentScale, 0.0f, 20.0f);
+    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 20.0f);
+    ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
 
     if (changed)
         recomputeStaticParams();
@@ -177,7 +179,7 @@ void Boid::updateBoids(float deltaTime)
             avgNeighborVelocity /= numVisibleBoids;
 
             steeringForce += avgNeighborVelocity - primaryBoid.m_velocity;
-            steeringForce *= ui::alignmentScale;
+            steeringForce *= settings::alignmentScale;
         }
 
         float steeringMagnitude{ glm::length(steeringForce) };
@@ -227,11 +229,14 @@ void Boid::createBoid(glm::vec2 pos)
 
 void Boid::renderBoid()
 {
+    if (settings::visionCone::showVisionCones)
+    {
+        glBindVertexArray(settings::visionCone::VAO);
+        glDrawArrays(GL_LINE_LOOP, 0, settings::visionCone::vertices.size());
+    }
+
     glBindVertexArray(s_VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glBindVertexArray(ui::visionCone::VAO);
-    glDrawArrays(GL_LINE_LOOP, 0, ui::visionCone::vertices.size());
 }
 
 Boid::Boid(glm::vec2 pos)
