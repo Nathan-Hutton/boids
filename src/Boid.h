@@ -14,6 +14,7 @@ class Boid
         static void showImGuiControls();
         static void updateBoids(float deltaTime);
         static void createBoid(glm::vec2 pos);
+        static void renderBoid();
 
         Boid(glm::vec2 pos);
         glm::vec2 getPos() const { return m_pos; }

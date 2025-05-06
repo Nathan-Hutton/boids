@@ -5,6 +5,7 @@
 
 #include <random>
 #include <vector>
+#include <array>
 #include <iostream>
 
 std::vector<Boid> Boid::s_boids{};
@@ -28,7 +29,7 @@ namespace rd
     std::uniform_real_distribution<float> speedDistribution{};
 }
 
-namespace imguiScalars
+namespace ui
 {
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
@@ -36,17 +37,24 @@ namespace imguiScalars
     float minSpeedScale{ 1.0f / 14.0f };
     float maxSteeringMagnitudeScale{ 0.4f };
     float minSteeringMagnitudeScale{ 1.0f / 3.5f };
+
+    namespace visionCone
+    {
+        GLuint VAO{};
+        GLuint VBO{};
+        std::array<GLfloat, 102> vertices{}; // So really 51 vertices (including middle)
+    }
 }
 
 void Boid::recomputeStaticParams()
 {
-    s_radius = Camera::screenWidth * imguiScalars::radiusScale;
-    s_visionAngleCos = glm::cos(glm::radians(imguiScalars::visionAngleDegrees) / 2.0f);
+    s_radius = Camera::screenWidth * ui::radiusScale;
+    s_visionAngleCos = glm::cos(glm::radians(ui::visionAngleDegrees) / 2.0f);
 
-    s_maxSpeed = Camera::screenWidth * imguiScalars::maxSpeedScale;
-    s_minSpeed = Camera::screenWidth * imguiScalars::minSpeedScale;
-    s_maxSteeringMagnitude = Camera::screenWidth * imguiScalars::maxSteeringMagnitudeScale;
-    s_minSteeringMagnitude = Camera::screenWidth * imguiScalars::minSteeringMagnitudeScale;
+    s_maxSpeed = Camera::screenWidth * ui::maxSpeedScale;
+    s_minSpeed = Camera::screenWidth * ui::minSpeedScale;
+    s_maxSteeringMagnitude = Camera::screenWidth * ui::maxSteeringMagnitudeScale;
+    s_minSteeringMagnitude = Camera::screenWidth * ui::minSteeringMagnitudeScale;
 
     rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
 }
@@ -55,8 +63,9 @@ void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
     s_triangleHeight = Camera::screenHeight / 80.0f;
-
     recomputeStaticParams();
+
+    // Boid triangle VAO
     // The coordinate frame is using screen resolution where the top left is 0,0. X points right and Y points down (because this is what GLFW uses)
     const GLfloat vertices[]
     {
@@ -77,17 +86,44 @@ void Boid::init()
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
+
+    // Boid vision cone/circle VAO
+    ui::visionCone::vertices[0] = 0.0f;
+    ui::visionCone::vertices[1] = 0.0f;
+
+    const GLfloat stepSize{ glm::radians(ui::visionAngleDegrees / (static_cast<float>(ui::visionCone::vertices.size() / 2) - 1.0f)) };
+    const GLfloat startAngle{ glm::radians(((360.0f - ui::visionAngleDegrees) / 2.0f) - 90.0f) };
+    size_t index{ 2 };
+    for (size_t i{ 0 }; i < (ui::visionCone::vertices.size() - 2) / 2; ++i)
+    {
+        const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
+        const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
+        ui::visionCone::vertices[index++] = x;
+        ui::visionCone::vertices[index++] = y;
+    }
+
+    glGenVertexArrays(1, &ui::visionCone::VAO);
+    glBindVertexArray(ui::visionCone::VAO);
+
+    glGenBuffers(1, &ui::visionCone::VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, ui::visionCone::VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ui::visionCone::vertices), ui::visionCone::vertices.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
 void Boid::showImGuiControls()
 {
     bool changed{ false };
-    changed |= ImGui::SliderFloat("Radius scale", &imguiScalars::radiusScale, 1.0f / 60.0f, 0.5f);
-    changed |= ImGui::SliderFloat("Vision angle (degrees)", &imguiScalars::visionAngleDegrees, 0.0f, 360.0f);
-    changed |= ImGui::SliderFloat("Max speed scale", &imguiScalars::maxSpeedScale, imguiScalars::minSpeedScale, 0.8f );
-    changed |= ImGui::SliderFloat("Min speed scale", &imguiScalars::minSpeedScale, 1.0f / 50.0f, imguiScalars::maxSpeedScale );
-    changed |= ImGui::SliderFloat("Max steering force scale", &imguiScalars::maxSteeringMagnitudeScale, imguiScalars::minSteeringMagnitudeScale, 2.0f );
-    changed |= ImGui::SliderFloat("Min steering force scale", &imguiScalars::minSteeringMagnitudeScale, 0.05f, imguiScalars::maxSteeringMagnitudeScale );
+    changed |= ImGui::SliderFloat("Radius scale", &ui::radiusScale, 0.0f, 0.3f);
+    changed |= ImGui::SliderFloat("Vision angle (degrees)", &ui::visionAngleDegrees, 0.0f, 360.0f);
+    changed |= ImGui::SliderFloat("Max speed scale", &ui::maxSpeedScale, ui::minSpeedScale, 0.8f );
+    changed |= ImGui::SliderFloat("Min speed scale", &ui::minSpeedScale, 1.0f / 50.0f, ui::maxSpeedScale );
+    changed |= ImGui::SliderFloat("Max steering force scale", &ui::maxSteeringMagnitudeScale, ui::minSteeringMagnitudeScale, 2.0f );
+    changed |= ImGui::SliderFloat("Min steering force scale", &ui::minSteeringMagnitudeScale, 0.05f, ui::maxSteeringMagnitudeScale );
 
     if (changed)
         recomputeStaticParams();
@@ -186,6 +222,15 @@ void Boid::updateBoids(float deltaTime)
 void Boid::createBoid(glm::vec2 pos)
 {
     s_boids.emplace_back(pos);
+}
+
+void Boid::renderBoid()
+{
+    glBindVertexArray(s_VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBindVertexArray(ui::visionCone::VAO);
+    glDrawArrays(GL_LINE_LOOP, 0, ui::visionCone::vertices.size());
 }
 
 Boid::Boid(glm::vec2 pos)

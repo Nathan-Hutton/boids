@@ -63,7 +63,7 @@ int main()
     glUseProgram(shaderProgram);
 
     bool showSettingsUI{ false };
-    glBindVertexArray(Boid::s_VAO);
+    //glBindVertexArray(Boid::s_VAO);
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))
     {
@@ -89,7 +89,8 @@ int main()
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            Boid::renderBoid();
+            //glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
         if (processPressingF1Key(window))
