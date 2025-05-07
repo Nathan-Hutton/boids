@@ -176,8 +176,8 @@ void Boid::updateBoids(float deltaTime)
             const float strength{ glm::clamp((s_radius - distance) / s_radius, 0.0f, 1.0f) };
             separationForce += -dirToOther * strength;
 
-            //alignmentForce += otherBoid.m_velocity;
-            alignmentForce += glm::normalize(otherBoid.m_velocity) * strength;
+            alignmentForce += otherBoid.m_velocity * strength;
+            //alignmentForce += glm::normalize(otherBoid.m_velocity) * strength;
 
             cohesionForce += otherBoid.m_pos;
 
@@ -191,20 +191,20 @@ void Boid::updateBoids(float deltaTime)
         }
 
         // Separation
-        separationForce *= settings::separationScale * (Camera::screenWidth * 0.05f);
+        separationForce *= settings::separationScale * (Camera::screenWidth * 0.15f);
 
         // Alignment
         //alignmentForce /= numVisibleBoids;
         //alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
-        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.1f);
+        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.002f);
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 0.5f;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 4.0f;
 
-        std::cout << "Separation: " << separationForce.x << ", " << separationForce.y << '\n';
-        std::cout << "Alignment: " << alignmentForce.x << ", " << alignmentForce.y << '\n';
-        std::cout << "Cohesion: " << cohesionForce.x << ", " << cohesionForce.y << "\n\n";
+        //std::cout << "Separation: " << separationForce.x << ", " << separationForce.y << '\n';
+        //std::cout << "Alignment: " << alignmentForce.x << ", " << alignmentForce.y << '\n';
+        //std::cout << "Cohesion: " << cohesionForce.x << ", " << cohesionForce.y << "\n\n";
 
         // Update positions and velocities
         steeringForce += separationForce + alignmentForce + cohesionForce;
@@ -296,4 +296,5 @@ Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
     m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_maxSpeed * 0.05f);
+    //m_velocity = glm::vec2{ 1.0f, 0.0f } * s_maxSpeed;
 }
