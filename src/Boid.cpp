@@ -173,7 +173,9 @@ void Boid::updateBoids(float deltaTime)
             if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < s_visionAngleCos) continue;
 
             cohesionForce += otherBoid.m_pos;
-            separationForce += -dirToOther / (distance + (s_triangleWidth / 4.0f));
+
+            const float strength{ glm::clamp((s_radius - distance) / s_radius, 0.0f, 1.0f) };
+            separationForce += -dirToOther * strength;
 
             ++numVisibleBoids;
             alignmentForce += otherBoid.m_velocity;
@@ -187,7 +189,7 @@ void Boid::updateBoids(float deltaTime)
         }
 
         // Separation
-        separationForce = (separationForce - primaryBoid.m_velocity) * settings::separationScale;
+        separationForce *= settings::separationScale * (Camera::screenWidth * 0.01f);
 
         // Alignment
         alignmentForce /= numVisibleBoids;
@@ -217,8 +219,8 @@ void Boid::updateBoids(float deltaTime)
 
         boid.m_velocity = updatedVelocities[i];
 
-        if (glm::length(boid.m_velocity) < 20.0f)
-            boid.m_velocity = glm::normalize(boid.m_velocity) * 20.0f;
+        if (glm::length(boid.m_velocity) < 100.0f)
+            boid.m_velocity = glm::normalize(boid.m_velocity) * 100.0f;
 
         boid.m_pos += boid.m_velocity * deltaTime;
         if (boid.m_pos.y - s_triangleHeight > Camera::screenHeight)
