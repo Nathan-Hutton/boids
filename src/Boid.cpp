@@ -31,7 +31,7 @@ namespace rd
 namespace settings
 {
     float separationScale{ 1.0f };
-    float alignmentScale{ 0.0f };
+    float alignmentScale{ 5.0f };
     float cohesionScale{ 0.0f };
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
@@ -48,7 +48,7 @@ namespace settings
 
 void Boid::recomputeStaticParams()
 {
-    s_maxSpeed = (Camera::screenWidth / 20.0f) * settings::maxSpeedScale;
+    s_maxSpeed = (Camera::screenWidth / 10.0f) * settings::maxSpeedScale;
     s_radius = Camera::screenWidth * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
@@ -76,7 +76,7 @@ void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
     s_triangleHeight = Camera::screenHeight / 80.0f;
-    s_maxSpeed = Camera::screenWidth / 100.0f;
+    s_maxSpeed = Camera::screenWidth / 10.0f;
     glPointSize(s_triangleWidth / 1.5f); // The points will show up at m_pos when we render the cones so we can see exactly where the boids are visible
     recomputeStaticParams();
 
@@ -146,8 +146,8 @@ void Boid::updateBoids(float deltaTime)
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
         // Noise (this will be the entire steering force if there are 0 neighbors)
-        //glm::vec2 steeringForce{ rd::distribution(rd::randomNumberGenerator) * 5.0f, rd::distribution(rd::randomNumberGenerator) * 5.0f };
-        glm::vec2 steeringForce{ 0.0f, 0.0f };
+        glm::vec2 steeringForce{ rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 0.05f), rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 0.05f) };
+        //glm::vec2 steeringForce{ 0.0f, 0.0f };
 
         glm::vec2 separationForce{ 0.0f };
         glm::vec2 alignmentForce{ 0.0f };
@@ -171,14 +171,16 @@ void Boid::updateBoids(float deltaTime)
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
             if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < s_visionAngleCos) continue;
-
-            cohesionForce += otherBoid.m_pos;
+            ++numVisibleBoids;
 
             const float strength{ glm::clamp((s_radius - distance) / s_radius, 0.0f, 1.0f) };
             separationForce += -dirToOther * strength;
 
-            ++numVisibleBoids;
-            alignmentForce += otherBoid.m_velocity;
+            //alignmentForce += otherBoid.m_velocity;
+            alignmentForce += glm::normalize(otherBoid.m_velocity) * strength;
+
+            cohesionForce += otherBoid.m_pos;
+
         }
 
         if (numVisibleBoids == 0)
@@ -189,11 +191,12 @@ void Boid::updateBoids(float deltaTime)
         }
 
         // Separation
-        separationForce *= settings::separationScale * (Camera::screenWidth * 0.01f);
+        separationForce *= settings::separationScale * (Camera::screenWidth * 0.05f);
 
         // Alignment
-        alignmentForce /= numVisibleBoids;
-        alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
+        //alignmentForce /= numVisibleBoids;
+        //alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
+        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.1f);
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
@@ -218,9 +221,6 @@ void Boid::updateBoids(float deltaTime)
         Boid& boid{ s_boids[i] };
 
         boid.m_velocity = updatedVelocities[i];
-
-        if (glm::length(boid.m_velocity) < 100.0f)
-            boid.m_velocity = glm::normalize(boid.m_velocity) * 100.0f;
 
         boid.m_pos += boid.m_velocity * deltaTime;
         if (boid.m_pos.y - s_triangleHeight > Camera::screenHeight)
@@ -295,5 +295,5 @@ void Boid::renderAllBoids()
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
-    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_triangleWidth * 10.0f);
+    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_maxSpeed * 0.05f);
 }
