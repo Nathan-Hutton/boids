@@ -16,10 +16,6 @@ GLuint Boid::s_VAO{};
 float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
 
-float Boid::s_maxSpeed{};
-float Boid::s_minSpeed{};
-float Boid::s_minSteeringMagnitude{};
-
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
 
@@ -27,25 +23,21 @@ namespace rd
 {
     std::random_device rd;
     std::mt19937 randomNumberGenerator{rd()};
-    std::uniform_real_distribution<float> speedDistribution{};
+    std::uniform_real_distribution<float> distribution{};
 }
 
 namespace settings
 {
+    float alignmentScale{ 5.0f };
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
-    float maxSpeedScale{ 1.0f / 6.0f };
-    float minSpeedScale{ 1.0f / 14.0f };
-    float minSteeringMagnitudeScale{ 1.0f / 8.5f };
-
-    float alignmentScale{ 5.0f };
 
     namespace visionCone
     {
         bool showVisionCones{ false };
         GLuint VAO{};
         GLuint VBO{};
-        std::array<GLfloat, 102> vertices{}; // So really 51 vertices (including middle)
+        std::array<GLfloat, 102> vertices{ 0.0f }; // So really 51 vertices (including middle)
     }
 }
 
@@ -54,11 +46,23 @@ void Boid::recomputeStaticParams()
     s_radius = Camera::screenWidth * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
-    s_maxSpeed = Camera::screenWidth * settings::maxSpeedScale;
-    s_minSpeed = Camera::screenWidth * settings::minSpeedScale;
-    s_minSteeringMagnitude = Camera::screenWidth * settings::minSteeringMagnitudeScale;
+    rd::distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
 
-    rd::speedDistribution = std::uniform_real_distribution<float>{-s_maxSpeed / 5.0f, s_maxSpeed / 5.0f};
+    // Recompute vision cone vertices
+    const GLfloat stepSize{ glm::radians(settings::visionAngleDegrees / (static_cast<float>(settings::visionCone::vertices.size() / 2) - 1.0f)) };
+    const GLfloat startAngle{ glm::radians(((360.0f - settings::visionAngleDegrees) / 2.0f) - 90.0f) };
+    size_t index{ 2 };
+    for (size_t i{ 0 }; i < (settings::visionCone::vertices.size() - 2) / 2; ++i)
+    {
+        const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
+        const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
+        settings::visionCone::vertices[index++] = x;
+        settings::visionCone::vertices[index++] = y;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, settings::visionCone::VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 2, sizeof(settings::visionCone::vertices) - (sizeof(settings::visionCone::vertices[0]) * 2.0f), settings::visionCone::vertices.data());
+    glBufferData(GL_ARRAY_BUFFER, sizeof(settings::visionCone::vertices), settings::visionCone::vertices.data(), GL_DYNAMIC_DRAW);
 }
 
 void Boid::init()
@@ -90,21 +94,7 @@ void Boid::init()
 
     glBindVertexArray(0);
 
-    // Boid vision cone/circle VAO
-    settings::visionCone::vertices[0] = 0.0f;
-    settings::visionCone::vertices[1] = 0.0f;
-
-    const GLfloat stepSize{ glm::radians(settings::visionAngleDegrees / (static_cast<float>(settings::visionCone::vertices.size() / 2) - 1.0f)) };
-    const GLfloat startAngle{ glm::radians(((360.0f - settings::visionAngleDegrees) / 2.0f) - 90.0f) };
-    size_t index{ 2 };
-    for (size_t i{ 0 }; i < (settings::visionCone::vertices.size() - 2) / 2; ++i)
-    {
-        const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
-        const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
-        settings::visionCone::vertices[index++] = x;
-        settings::visionCone::vertices[index++] = y;
-    }
-
+    // Boid vision cone/circle VAO. This is already initialized to zero
     glGenVertexArrays(1, &settings::visionCone::VAO);
     glBindVertexArray(settings::visionCone::VAO);
 
@@ -120,15 +110,12 @@ void Boid::init()
 
 void Boid::showImGuiControls()
 {
+    ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
+    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 20.0f);
+
     bool changed{ false };
     changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 0.3f);
     changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
-    changed |= ImGui::SliderFloat("Max speed scale", &settings::maxSpeedScale, settings::minSpeedScale, 0.8f );
-    changed |= ImGui::SliderFloat("Min speed scale", &settings::minSpeedScale, 1.0f / 50.0f, settings::maxSpeedScale );
-    changed |= ImGui::SliderFloat("Min steering force scale", &settings::minSteeringMagnitudeScale, 0.05f, 0.8f );
-
-    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 20.0f);
-    ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
 
     if (changed)
         recomputeStaticParams();
@@ -143,16 +130,20 @@ void Boid::updateBoids(float deltaTime)
     {
         Boid& primaryBoid{ s_boids[i] };
         int numVisibleBoids{ 0 };
-        glm::vec2 steeringForce{ 0.0f };
-
-        // Alignment
-        glm::vec2 avgNeighborVelocity{ 0.0f };
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
-        // Cohesion
+        // Noise (this will be the entire steering force if there are 0 neighbors)
+        glm::vec2 steeringForce{ rd::distribution(rd::randomNumberGenerator) * 5.0f, rd::distribution(rd::randomNumberGenerator) * 5.0f };
 
+        // Alignment
+        glm::vec2 alignmentForce{ 0.0f };
+        glm::vec2 avgNeighborVelocity{ 0.0f };
+
+        // Cohesion
+        glm::vec2 cohesionForce{ 0.0f };
 
         // Separation
+        glm::vec2 separationForce{ 0.0f };
 
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
@@ -160,19 +151,28 @@ void Boid::updateBoids(float deltaTime)
             const Boid& otherBoid{ s_boids[j] };
 
             glm::vec2 vecToOther{ otherBoid.m_pos - primaryBoid.m_pos };
+
+            // Account for wraparound
             if (std::abs(vecToOther.x) > Camera::screenWidth / 2.0f)
                 vecToOther.x -= glm::sign(vecToOther.x) * Camera::screenWidth;
             if (std::abs(vecToOther.y) > Camera::screenHeight / 2.0f)
                 vecToOther.y -= glm::sign(vecToOther.y) * Camera::screenHeight;
 
-            const float dist{ glm::length(vecToOther) };
-            if (dist > s_radius || dist < 1e-6) continue;
+            const float distance{ glm::length(vecToOther) };
+            if (distance > s_radius || distance < 1e-6) continue;
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
             if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < s_visionAngleCos) continue;
 
             ++numVisibleBoids;
             avgNeighborVelocity += otherBoid.m_velocity;
+        }
+
+        if (numVisibleBoids == 0)
+        {
+            updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
+            updatedVelocities[i] = updatedVelocity;
+            continue;
         }
 
         if (numVisibleBoids > 0)
@@ -186,26 +186,7 @@ void Boid::updateBoids(float deltaTime)
             steeringForce *= settings::alignmentScale;
         }
 
-        float steeringMagnitude{ glm::length(steeringForce) };
-        while (steeringMagnitude < 1e-6)
-        {
-            steeringForce = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator) / 5.0f, rd::speedDistribution(rd::randomNumberGenerator) / 5.0f };
-            steeringMagnitude = glm::length(steeringForce);
-        }
-
-        // Min clamp for steering force (so things don't move too slow)
-        if (steeringMagnitude < s_minSteeringMagnitude)
-            steeringForce *= s_minSteeringMagnitude / steeringMagnitude;
-
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
-
-        // Min/Max clamp for velocity
-        const float velocityMagnitude{ glm::length(updatedVelocity) };
-        if (velocityMagnitude > s_maxSpeed)
-            updatedVelocity *= s_maxSpeed / velocityMagnitude;
-        else if (velocityMagnitude < s_minSpeed)
-            updatedVelocity *= s_minSpeed / velocityMagnitude;
-
         updatedVelocities[i] = updatedVelocity;
     }
 
@@ -287,5 +268,5 @@ void Boid::renderAllBoids()
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
-    m_velocity = glm::vec2{ rd::speedDistribution(rd::randomNumberGenerator), rd::speedDistribution(rd::randomNumberGenerator) };
+    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_triangleWidth * 5.0f);
 }
