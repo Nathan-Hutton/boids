@@ -16,6 +16,8 @@ GLuint Boid::s_VAO{};
 float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
 
+float Boid::s_maxSpeed{};
+
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
 
@@ -28,9 +30,12 @@ namespace rd
 
 namespace settings
 {
-    float alignmentScale{ 5.0f };
+    float separationScale{ 1.0f };
+    float alignmentScale{ 1.0f };
+    float cohesionScale{ 1.0f };
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
+    float maxSpeedScale{ 1.0f };
 
     namespace visionCone
     {
@@ -43,6 +48,8 @@ namespace settings
 
 void Boid::recomputeStaticParams()
 {
+    s_maxSpeed = (Camera::screenWidth / 20.0f) * settings::maxSpeedScale;
+    std::cout << s_maxSpeed << '\n';
     s_radius = Camera::screenWidth * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
@@ -69,6 +76,7 @@ void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
     s_triangleHeight = Camera::screenHeight / 80.0f;
+    s_maxSpeed = Camera::screenWidth / 100.0f;
     glPointSize(s_triangleWidth / 1.5f); // The points will show up at m_pos when we render the cones so we can see exactly where the boids are visible
     recomputeStaticParams();
 
@@ -111,7 +119,9 @@ void Boid::init()
 void Boid::showImGuiControls()
 {
     ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
+    ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 20.0f);
     ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 20.0f);
+    ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 20.0f);
 
     bool changed{ false };
     changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 0.3f);
@@ -135,21 +145,16 @@ void Boid::updateBoids(float deltaTime)
         // Noise (this will be the entire steering force if there are 0 neighbors)
         glm::vec2 steeringForce{ rd::distribution(rd::randomNumberGenerator) * 5.0f, rd::distribution(rd::randomNumberGenerator) * 5.0f };
 
-        // Alignment
-        glm::vec2 alignmentForce{ 0.0f };
-        glm::vec2 avgNeighborVelocity{ 0.0f };
-
-        // Cohesion
-        glm::vec2 cohesionForce{ 0.0f };
-
-        // Separation
         glm::vec2 separationForce{ 0.0f };
+        glm::vec2 alignmentForce{ 0.0f };
+        glm::vec2 cohesionForce{ 0.0f };
 
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
             const Boid& otherBoid{ s_boids[j] };
 
+            cohesionForce += otherBoid.m_pos;
             glm::vec2 vecToOther{ otherBoid.m_pos - primaryBoid.m_pos };
 
             // Account for wraparound
@@ -164,8 +169,10 @@ void Boid::updateBoids(float deltaTime)
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
             if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < s_visionAngleCos) continue;
 
+            separationForce += -dirToOther / distance;
+
             ++numVisibleBoids;
-            avgNeighborVelocity += otherBoid.m_velocity;
+            alignmentForce += otherBoid.m_velocity;
         }
 
         if (numVisibleBoids == 0)
@@ -175,18 +182,24 @@ void Boid::updateBoids(float deltaTime)
             continue;
         }
 
-        if (numVisibleBoids > 0)
-        {
-            // *********
-            // Alignment
-            // *********
-            avgNeighborVelocity /= numVisibleBoids;
+        // Separation
+        separationForce = (separationForce - primaryBoid.m_velocity) * settings::separationScale;
 
-            steeringForce += avgNeighborVelocity - primaryBoid.m_velocity;
-            steeringForce *= settings::alignmentScale;
-        }
+        // Alignment
+        alignmentForce /= numVisibleBoids;
+        alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
 
+        // Cohesion
+        cohesionForce /= numVisibleBoids;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale;
+
+        // Update positions and velocities
+        steeringForce += separationForce + alignmentForce + cohesionForce;
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
+
+        if (glm::length(updatedVelocity) > s_maxSpeed)
+            updatedVelocity = glm::normalize(updatedVelocity) * s_maxSpeed;
+
         updatedVelocities[i] = updatedVelocity;
     }
 
