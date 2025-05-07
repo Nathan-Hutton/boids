@@ -31,8 +31,8 @@ namespace rd
 namespace settings
 {
     float separationScale{ 1.0f };
-    float alignmentScale{ 5.0f };
-    float cohesionScale{ 0.0f };
+    float alignmentScale{ 1.0f };
+    float cohesionScale{ 1.0f };
     float radiusScale{ 1.0f / 20.0f };
     float visionAngleDegrees{ 270.0f };
     float maxSpeedScale{ 1.0f };
@@ -119,9 +119,9 @@ void Boid::init()
 void Boid::showImGuiControls()
 {
     ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
-    ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 20.0f);
-    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 20.0f);
-    ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 20.0f);
+    ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
+    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
+    ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
 
     bool changed{ false };
     changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 0.3f);
@@ -200,7 +200,7 @@ void Boid::updateBoids(float deltaTime)
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 0.05f;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 0.5f;
 
         std::cout << "Separation: " << separationForce.x << ", " << separationForce.y << '\n';
         std::cout << "Alignment: " << alignmentForce.x << ", " << alignmentForce.y << '\n';
