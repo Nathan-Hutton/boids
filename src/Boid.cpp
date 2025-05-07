@@ -145,9 +145,9 @@ void Boid::updateBoids(float deltaTime)
         int numVisibleBoids{ 0 };
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
-        // Noise (this will be the entire steering force if there are 0 neighbors)
-        glm::vec2 steeringForce{ rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 0.05f), rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 0.05f) };
-        //glm::vec2 steeringForce{ 0.0f, 0.0f };
+        glm::vec2 steeringForce{ 0.0f };
+        glm::vec2 noise{ rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f), rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f) };
+        steeringForce += noise;
 
         glm::vec2 separationForce{ 0.0f };
         glm::vec2 alignmentForce{ 0.0f };
@@ -176,10 +176,10 @@ void Boid::updateBoids(float deltaTime)
             const float strength{ glm::clamp((s_radius - distance) / s_radius, 0.0f, 1.0f) };
             separationForce += -dirToOther * strength;
 
-            alignmentForce += otherBoid.m_velocity * strength;
-            //alignmentForce += glm::normalize(otherBoid.m_velocity) * strength;
+            //alignmentForce += otherBoid.m_velocity * strength;
+            alignmentForce += glm::normalize(otherBoid.m_velocity) * strength;
 
-            cohesionForce += otherBoid.m_pos;
+            cohesionForce += primaryBoid.m_pos + vecToOther; // I'm doing this instead of using neighborBoid.m_pos to account for wraparound
 
         }
 
@@ -196,18 +196,18 @@ void Boid::updateBoids(float deltaTime)
         // Alignment
         //alignmentForce /= numVisibleBoids;
         //alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
-        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.002f);
+        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.1f);
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 4.0f;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 8.0f;
 
         //std::cout << "Separation: " << separationForce.x << ", " << separationForce.y << '\n';
         //std::cout << "Alignment: " << alignmentForce.x << ", " << alignmentForce.y << '\n';
         //std::cout << "Cohesion: " << cohesionForce.x << ", " << cohesionForce.y << "\n\n";
 
         // Update positions and velocities
-        steeringForce += separationForce + alignmentForce + cohesionForce;
+        steeringForce += separationForce + alignmentForce + cohesionForce + noise;
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
 
         if (glm::length(updatedVelocity) > s_maxSpeed)
@@ -295,6 +295,5 @@ void Boid::renderAllBoids()
 Boid::Boid(glm::vec2 pos)
 {
     m_pos = pos;
-    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_maxSpeed * 0.05f);
-    //m_velocity = glm::vec2{ 1.0f, 0.0f } * s_maxSpeed;
+    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_maxSpeed * 0.25f);
 }
