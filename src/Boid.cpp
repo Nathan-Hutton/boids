@@ -129,6 +129,9 @@ void Boid::showImGuiControls()
 
     if (changed)
         recomputeStaticParams();
+
+    if (ImGui::Button("Clear boids"))
+        s_boids.clear();
 }
 
 void Boid::updateBoids(float deltaTime)
@@ -170,7 +173,7 @@ void Boid::updateBoids(float deltaTime)
             if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < s_visionAngleCos) continue;
 
             cohesionForce += otherBoid.m_pos;
-            separationForce += -dirToOther / (distance + (s_triangleWidth / 2.0f));
+            separationForce += -dirToOther / (distance + (s_triangleWidth / 4.0f));
 
             ++numVisibleBoids;
             alignmentForce += otherBoid.m_velocity;
@@ -208,21 +211,25 @@ void Boid::updateBoids(float deltaTime)
         updatedVelocities[i] = updatedVelocity;
     }
 
-    //for (size_t i{ 0 }; i < s_boids.size(); ++i)
-    //{
-    //    Boid& boid{ s_boids[i] };
+    for (size_t i{ 0 }; i < s_boids.size(); ++i)
+    {
+        Boid& boid{ s_boids[i] };
 
-    //    boid.m_velocity = updatedVelocities[i];
-    //    boid.m_pos += boid.m_velocity * deltaTime;
-    //    if (boid.m_pos.y - s_triangleHeight > Camera::screenHeight)
-    //        boid.m_pos.y -= Camera::screenHeight + s_triangleHeight;
-    //    if (boid.m_pos.y + s_triangleHeight < 0)
-    //        boid.m_pos.y += Camera::screenHeight + s_triangleHeight;
-    //    if (boid.m_pos.x - s_triangleHeight > Camera::screenWidth)
-    //        boid.m_pos.x -= Camera::screenWidth + s_triangleHeight;
-    //    if (boid.m_pos.x + s_triangleHeight < 0)
-    //        boid.m_pos.x += Camera::screenWidth + s_triangleHeight;
-    //}
+        boid.m_velocity = updatedVelocities[i];
+
+        if (glm::length(boid.m_velocity) < 20.0f)
+            boid.m_velocity = glm::normalize(boid.m_velocity) * 20.0f;
+
+        boid.m_pos += boid.m_velocity * deltaTime;
+        if (boid.m_pos.y - s_triangleHeight > Camera::screenHeight)
+            boid.m_pos.y -= Camera::screenHeight + s_triangleHeight;
+        if (boid.m_pos.y + s_triangleHeight < 0)
+            boid.m_pos.y += Camera::screenHeight + s_triangleHeight;
+        if (boid.m_pos.x - s_triangleHeight > Camera::screenWidth)
+            boid.m_pos.x -= Camera::screenWidth + s_triangleHeight;
+        if (boid.m_pos.x + s_triangleHeight < 0)
+            boid.m_pos.x += Camera::screenWidth + s_triangleHeight;
+    }
 }
 
 void Boid::createBoid(glm::vec2 pos)
