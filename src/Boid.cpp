@@ -25,7 +25,7 @@ namespace rd
 {
     std::random_device rd;
     std::mt19937 randomNumberGenerator{rd()};
-    std::uniform_real_distribution<float> distribution{};
+    std::uniform_real_distribution<float> centeredDistribution{-1.0f, 1.0f};
 }
 
 namespace settings
@@ -51,8 +51,6 @@ void Boid::recomputeStaticParams()
     s_maxSpeed = (Camera::screenWidth / 10.0f) * settings::maxSpeedScale;
     s_radius = Camera::screenWidth * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
-
-    rd::distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
 
     // Recompute vision cone vertices
     const size_t numSegments{ (settings::visionCone::vertices.size() - 4) / 2 };
@@ -146,7 +144,7 @@ void Boid::updateBoids(float deltaTime)
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
         glm::vec2 steeringForce{ 0.0f };
-        glm::vec2 noise{ rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f), rd::distribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f) };
+        glm::vec2 noise{ rd::centeredDistribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f), rd::centeredDistribution(rd::randomNumberGenerator) * (s_maxSpeed * 1.5f) };
         steeringForce += noise;
 
         glm::vec2 separationForce{ 0.0f };
@@ -201,10 +199,6 @@ void Boid::updateBoids(float deltaTime)
         // Cohesion
         cohesionForce /= numVisibleBoids;
         cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 8.0f;
-
-        //std::cout << "Separation: " << separationForce.x << ", " << separationForce.y << '\n';
-        //std::cout << "Alignment: " << alignmentForce.x << ", " << alignmentForce.y << '\n';
-        //std::cout << "Cohesion: " << cohesionForce.x << ", " << cohesionForce.y << "\n\n";
 
         // Update positions and velocities
         steeringForce += separationForce + alignmentForce + cohesionForce + noise;
@@ -267,9 +261,10 @@ void Boid::renderAllBoids()
     }
 
     glBindVertexArray(s_VAO);
-    glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.0f, 1.0f, 1.0f }));
     for (const Boid& boid : s_boids)
     {
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(boid.m_colorRGB));
+
         glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
         model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
         glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
@@ -293,7 +288,20 @@ void Boid::renderAllBoids()
 }
 
 Boid::Boid(glm::vec2 pos)
+    : m_pos{ pos }
+    , m_velocity{ glm::vec2{ 
+        rd::centeredDistribution(rd::randomNumberGenerator),
+        rd::centeredDistribution(rd::randomNumberGenerator) 
+    } * (s_maxSpeed * 0.25f) }
 {
-    m_pos = pos;
-    m_velocity = glm::vec2{ rd::distribution(rd::randomNumberGenerator), rd::distribution(rd::randomNumberGenerator) } * (s_maxSpeed * 0.25f);
+    m_colorRGB = {
+        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f,
+        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f,
+        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f 
+    };
+
+    //glm::vec3 something{ 1.0f, 1.0f, 1.0f };
+    //std::cout << glm::length(something) << '\n';
+    if (glm::length(m_colorRGB) < 1.2f)
+        m_colorRGB = glm::normalize(m_colorRGB) * 1.2f;
 }

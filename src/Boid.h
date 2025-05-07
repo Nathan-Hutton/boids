@@ -24,6 +24,7 @@ class Boid
     private:
         glm::vec2 m_pos{ 0.0f };
         glm::vec2 m_velocity{ 0.0f };
+        glm::vec3 m_colorRGB{ 0.0f, 1.0f, 0.0f };
 
         static float s_triangleWidth;
         static float s_triangleHeight;
