@@ -42,7 +42,7 @@ namespace settings
         bool showVisionCones{ false };
         GLuint VAO{};
         GLuint VBO{};
-        std::array<GLfloat, 102> vertices{ 0.0f }; // So really 51 vertices (including middle)
+        std::array<GLfloat, 104> vertices{ 0.0f }; // So really 51 vertices (including middle)
     }
 }
 
@@ -55,12 +55,12 @@ void Boid::recomputeStaticParams()
     rd::distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
 
     // Recompute vision cone vertices
-    const size_t numSegments{ (settings::visionCone::vertices.size() - 2) / 2 };
+    const size_t numSegments{ (settings::visionCone::vertices.size() - 4) / 2 };
     const GLfloat stepSize{ glm::radians(settings::visionAngleDegrees / static_cast<float>(numSegments)) };
     const GLfloat startAngle{ glm::radians(((360.0f - settings::visionAngleDegrees) / 2.0f) - 90.0f) };
 
     size_t index{ 2 };
-    for (size_t i{ 0 }; i < numSegments; ++i)
+    for (size_t i{ 0 }; i <= numSegments; ++i)
     {
         const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
         const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
