@@ -196,7 +196,7 @@ void Boid::updateBoids(float deltaTime)
         // Alignment
         //alignmentForce /= numVisibleBoids;
         //alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
-        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.1f);
+        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.15f);
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
