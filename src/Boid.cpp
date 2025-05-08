@@ -156,31 +156,63 @@ void Boid::init()
 void Boid::showImGuiControls()
 {
     ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
+    ImGui::PushItemWidth(Camera::screenWidth / 20.0f);
     bool changed{ false };
+
     if (ImGui::CollapsingHeader("Primary")) {
+        // Separation scale
         changed |= ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##SeparationInput", &settings::separationScale, 1.0f);
+        settings::separationScale = std::clamp(settings::separationScale, 0.0f, 8.0f);
+
+        // Alignment scale
         changed |= ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##AlignmentInput", &settings::alignmentScale, 1.0f);
+        settings::alignmentScale = std::clamp(settings::alignmentScale, 0.0f, 8.0f);
+
+        // Cohesion scale
         changed |= ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##CohesionInput", &settings::cohesionScale, 1.0f);
+        settings::cohesionScale = std::clamp(settings::cohesionScale, 0.0f, 8.0f);
+
+        // Max speed scale
         changed |= ImGui::SliderFloat("Max speed scale", &settings::maxSpeedScale, 0.0f, 4.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##MaxSpeedInput", &settings::maxSpeedScale, 0.5f);
+        settings::maxSpeedScale = std::clamp(settings::maxSpeedScale, 0.0f, 4.0f);
     }
 
     if (ImGui::CollapsingHeader("Radius")) {
         ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
+
         changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##RadiusInput", &settings::radiusScale, 1.0f);
+        settings::radiusScale = std::clamp(settings::radiusScale, 0.0f, 8.0f);
+
         changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
+        ImGui::SameLine();
+        changed |= ImGui::InputFloat("##VisionAngleInput", &settings::visionAngleDegrees, 5.0f);
+        settings::visionAngleDegrees = std::clamp(settings::visionAngleDegrees, 0.0f, 360.0f);
     }
 
     if (changed)
         recomputeStaticParams();
 
     if (ImGui::CollapsingHeader("Scene")) {
-        ImGui::SliderInt("Boids per click", &settings::numBoidsPerClick, 1, 10);
+        ImGui::SliderInt("Boids per click", &settings::numBoidsPerClick, 1, 100);
+        ImGui::SameLine();
+        ImGui::InputInt("##NumBoidsInput", &settings::numBoidsPerClick, 1);
+        settings::numBoidsPerClick = std::clamp(settings::numBoidsPerClick, 1, 100);
 
         if (ImGui::Button("Clear boids"))
             s_boids.clear();
     }
 
+    ImGui::PopItemWidth();
     ImGui::End();
 }
 
