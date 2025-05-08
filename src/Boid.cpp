@@ -61,7 +61,7 @@ namespace settings
     float separationScale{ 1.0f };
     float alignmentScale{ 1.0f };
     float cohesionScale{ 1.0f };
-    float radiusScale{ 1.0f / 20.0f };
+    float radiusScale{ 1.0f };
     float visionAngleDegrees{ 270.0f };
     float maxSpeedScale{ 1.0f };
 
@@ -77,7 +77,7 @@ namespace settings
 void Boid::recomputeStaticParams()
 {
     s_maxSpeed = (Camera::screenWidth / 10.0f) * settings::maxSpeedScale;
-    s_radius = Camera::screenWidth * settings::radiusScale;
+    s_radius = (Camera::screenWidth / 20.0f) * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
     // Recompute vision cone vertices
@@ -150,7 +150,7 @@ void Boid::showImGuiControls()
     ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
 
     bool changed{ false };
-    changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 0.3f);
+    changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
     changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
 
     if (changed)
