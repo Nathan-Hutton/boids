@@ -179,6 +179,9 @@ void Boid::updateBoids(float deltaTime)
         glm::vec2 alignmentForce{ 0.0f };
         glm::vec2 cohesionForce{ 0.0f };
 
+        float hueSinSum{ 0.0f };
+        float hueCosSum{ 0.0f };
+
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
@@ -207,6 +210,10 @@ void Boid::updateBoids(float deltaTime)
 
             cohesionForce += primaryBoid.m_pos + vecToOther; // I'm doing this instead of using neighborBoid.m_pos to account for wraparound
 
+            // Hue averaging using complex number projection
+            const float hueAngle{ glm::two_pi<float>() * otherBoid.m_hue };
+            hueSinSum += sin(hueAngle);
+            hueCosSum += cos(hueAngle);
         }
 
         if (numVisibleBoids == 0)
@@ -236,6 +243,22 @@ void Boid::updateBoids(float deltaTime)
             updatedVelocity = glm::normalize(updatedVelocity) * s_maxSpeed;
 
         updatedVelocities[i] = updatedVelocity;
+
+        // Update hue
+        float avgHueAngle{ static_cast<float>(atan2(hueSinSum, hueCosSum)) };
+        if (avgHueAngle < 0.0f)
+            avgHueAngle += glm::two_pi<float>();
+
+        const float avgHue{ avgHueAngle / glm::two_pi<float>() };
+
+        float hueDelta{ avgHue - primaryBoid.m_hue };
+        if (hueDelta > 0.5f) 
+            hueDelta -= 1.0f;
+        else if (hueDelta < -0.5f) 
+            hueDelta += 1.0f;
+
+        primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
+        primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
     }
 
     for (size_t i{ 0 }; i < s_boids.size(); ++i)
@@ -291,7 +314,7 @@ void Boid::renderAllBoids()
     glBindVertexArray(s_VAO);
     for (const Boid& boid : s_boids)
     {
-        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(boid.m_colorRGB));
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(color::getRGBFromHue(boid.m_hue)));
 
         glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
         model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
@@ -322,5 +345,4 @@ Boid::Boid(glm::vec2 pos)
         rd::centeredDistribution(rd::randomNumberGenerator) 
     } * (s_maxSpeed * 0.25f) }
     , m_hue{ (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f }
-    , m_colorRGB{ color::getRGBFromHue(m_hue) }
 {}
