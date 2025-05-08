@@ -16,6 +16,10 @@ GLuint Boid::s_VAO{};
 float Boid::s_triangleWidth{};
 float Boid::s_triangleHeight{};
 
+float Boid::s_separation{};
+float Boid::s_alignment{};
+float Boid::s_cohesion;
+
 float Boid::s_maxSpeed{};
 
 float Boid::s_radius{};
@@ -77,7 +81,12 @@ namespace settings
 
 void Boid::recomputeStaticParams()
 {
+    s_separation = settings::separationScale * (Camera::screenWidth * 0.15f);
+    s_alignment = settings::alignmentScale * (Camera::screenWidth * 0.15f);
+    s_cohesion = settings::cohesionScale * (Camera::screenWidth / 240.0f);
+
     s_maxSpeed = (Camera::screenWidth / 10.0f) * settings::maxSpeedScale;
+
     s_radius = (Camera::screenWidth / 20.0f) * settings::radiusScale;
     s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
 
@@ -103,7 +112,6 @@ void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
     s_triangleHeight = Camera::screenHeight / 80.0f;
-    s_maxSpeed = Camera::screenWidth / 10.0f;
     glPointSize(s_triangleWidth / 1.5f); // The points will show up at m_pos when we render the cones so we can see exactly where the boids are visible
     recomputeStaticParams();
 
@@ -236,16 +244,14 @@ void Boid::updateBoids(float deltaTime)
         }
 
         // Separation
-        separationForce *= settings::separationScale * (Camera::screenWidth * 0.15f);
+        separationForce *= s_separation;
 
         // Alignment
-        //alignmentForce /= numVisibleBoids;
-        //alignmentForce = (alignmentForce - primaryBoid.m_velocity) * settings::alignmentScale;
-        alignmentForce *= settings::alignmentScale * (Camera::screenWidth * 0.15f);
+        alignmentForce *= s_alignment;
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * settings::cohesionScale * 8.0f;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * s_cohesion;
 
         // Update positions and velocities
         steeringForce += separationForce + alignmentForce + cohesionForce + noise;

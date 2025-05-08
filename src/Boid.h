@@ -29,6 +29,10 @@ class Boid
         static float s_triangleWidth;
         static float s_triangleHeight;
 
+        static float s_separation;
+        static float s_alignment;
+        static float s_cohesion;
+
         static float s_maxSpeed;
 
         static float s_radius;
