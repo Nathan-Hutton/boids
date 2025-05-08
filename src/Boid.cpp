@@ -258,6 +258,10 @@ void Boid::updateBoids(float deltaTime)
             hueDelta += 1.0f;
 
         primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
+
+        const float hueNoise{ rd::centeredDistribution(rd::randomNumberGenerator) };
+        primaryBoid.m_hue += hueNoise * 0.008f;
+
         primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
     }
 
