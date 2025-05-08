@@ -77,6 +77,8 @@ namespace settings
         GLuint VBO{};
         std::array<GLfloat, 104> vertices{ 0.0f }; // So really 51 vertices (including middle)
     }
+
+    int numBoidsPerClick{ 1 };
 }
 
 void Boid::recomputeStaticParams()
@@ -173,6 +175,8 @@ void Boid::showImGuiControls()
         recomputeStaticParams();
 
     if (ImGui::CollapsingHeader("Scene")) {
+        ImGui::SliderInt("Boids per click", &settings::numBoidsPerClick, 1, 10);
+
         if (ImGui::Button("Clear boids"))
             s_boids.clear();
     }
@@ -303,7 +307,8 @@ void Boid::updateBoids(float deltaTime)
 
 void Boid::createBoid(glm::vec2 pos)
 {
-    s_boids.emplace_back(pos);
+    for (int i{ 0 }; i < settings::numBoidsPerClick; ++i)
+        s_boids.emplace_back(pos);
 }
 
 void Boid::renderAllBoids()
