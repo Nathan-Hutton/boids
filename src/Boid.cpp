@@ -21,6 +21,34 @@ float Boid::s_maxSpeed{};
 float Boid::s_radius{};
 float Boid::s_visionAngleCos{};
 
+namespace color
+{
+    constexpr float saturation{ 90.0f / 255.0f };
+    constexpr float brightness{ 200.0f / 255.0f };
+
+    glm::vec3 getRGBFromHue(float hue)
+    {
+        const float h{ hue * 6.0f };
+        const int i{ int(floor(h)) };
+        const float f{ h - i };
+        const float p{ brightness * (1.0f - saturation) };
+        const float q{ brightness * (1.0f - saturation * f) };
+        const float t{ brightness * (1.0f - saturation * (1.0f - f)) };
+
+        switch (i % 6)
+        {
+            case 0 : return { brightness, t, q };
+            case 1 : return { q, brightness, p };
+            case 2 : return { p, brightness, t };
+            case 3 : return { p, q, brightness };
+            case 4 : return { t, p, brightness };
+            case 5 : return { brightness, p, q };
+        }
+
+        return { 0.0f, 0.0f, 0.0f };
+    }
+}
+
 namespace rd
 {
     std::random_device rd;
@@ -293,15 +321,6 @@ Boid::Boid(glm::vec2 pos)
         rd::centeredDistribution(rd::randomNumberGenerator),
         rd::centeredDistribution(rd::randomNumberGenerator) 
     } * (s_maxSpeed * 0.25f) }
-{
-    m_colorRGB = {
-        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f,
-        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f,
-        (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f 
-    };
-
-    //glm::vec3 something{ 1.0f, 1.0f, 1.0f };
-    //std::cout << glm::length(something) << '\n';
-    if (glm::length(m_colorRGB) < 1.2f)
-        m_colorRGB = glm::normalize(m_colorRGB) * 1.2f;
-}
+    , m_hue{ (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f }
+    , m_colorRGB{ color::getRGBFromHue(m_hue) }
+{}
