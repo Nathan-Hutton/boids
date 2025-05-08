@@ -144,20 +144,30 @@ void Boid::init()
 
 void Boid::showImGuiControls()
 {
-    ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
-    ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
-    ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
-    ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+    ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    if (ImGui::CollapsingHeader("Primary")) {
+        ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
+        ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
+        ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+    }
 
     bool changed{ false };
-    changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
-    changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
+    if (ImGui::CollapsingHeader("Radius")) {
+        ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
+        changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
+    }
 
     if (changed)
         recomputeStaticParams();
 
-    if (ImGui::Button("Clear boids"))
-        s_boids.clear();
+    if (ImGui::CollapsingHeader("Scene")) {
+        if (ImGui::Button("Clear boids"))
+            s_boids.clear();
+    }
+
+    ImGui::End();
 }
 
 void Boid::updateBoids(float deltaTime)

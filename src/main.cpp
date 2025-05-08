@@ -86,11 +86,7 @@ int main()
             showSettingsUI = !showSettingsUI;
 
         if (showSettingsUI)
-        {
-            ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
             Boid::showImGuiControls();
-            ImGui::End();
-        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
