@@ -61,6 +61,7 @@ namespace settings
     float separationScale{ 1.0f };
     float alignmentScale{ 1.0f };
     float cohesionScale{ 1.0f };
+
     float radiusScale{ 1.0f };
     float visionAngleDegrees{ 270.0f };
     float maxSpeedScale{ 1.0f };
@@ -146,13 +147,14 @@ void Boid::showImGuiControls()
 {
     ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
+    bool changed{ false };
     if (ImGui::CollapsingHeader("Primary")) {
-        ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
-        ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
-        ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Max speed scale", &settings::maxSpeedScale, 0.0f, 4.0f);
     }
 
-    bool changed{ false };
     if (ImGui::CollapsingHeader("Radius")) {
         ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
         changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
