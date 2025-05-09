@@ -1,13 +1,12 @@
 #include "Boid.h"
-#include "Camera.h"
-#include "ShaderHandler.h"
+#include "../Camera.h"
+#include "../ShaderHandler.h"
 
 #include "imgui.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
-#include <vector>
 #include <array>
 #include <iostream>
 

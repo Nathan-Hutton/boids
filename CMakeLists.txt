@@ -39,7 +39,7 @@ find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 
 # Add executable
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Add ImGui source files
 set(IMGUI_SRC
