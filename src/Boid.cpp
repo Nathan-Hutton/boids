@@ -110,6 +110,12 @@ void Boid::recomputeStaticParams()
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(settings::visionCone::vertices), settings::visionCone::vertices.data());
 }
 
+void Boid::randomizeHues()
+{
+    for (Boid& boid : s_boids)
+        boid.m_hue = (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f;
+}
+
 void Boid::init()
 {
     s_triangleWidth = Camera::screenWidth / 220.0f;
@@ -159,7 +165,8 @@ void Boid::showImGuiControls()
     ImGui::PushItemWidth(Camera::screenWidth / 20.0f);
     bool changed{ false };
 
-    if (ImGui::CollapsingHeader("Primary")) {
+    if (ImGui::CollapsingHeader("Primary")) 
+    {
         // Separation scale
         changed |= ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
         ImGui::SameLine();
@@ -185,7 +192,8 @@ void Boid::showImGuiControls()
         settings::maxSpeedScale = std::clamp(settings::maxSpeedScale, 0.0f, 4.0f);
     }
 
-    if (ImGui::CollapsingHeader("Radius")) {
+    if (ImGui::CollapsingHeader("Radius")) 
+    {
         ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
 
         changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
@@ -202,7 +210,8 @@ void Boid::showImGuiControls()
     if (changed)
         recomputeStaticParams();
 
-    if (ImGui::CollapsingHeader("Scene")) {
+    if (ImGui::CollapsingHeader("Scene")) 
+    {
         ImGui::SliderInt("Boids per click", &settings::numBoidsPerClick, 1, 100);
         ImGui::SameLine();
         ImGui::InputInt("##NumBoidsInput", &settings::numBoidsPerClick, 1);
@@ -212,16 +221,20 @@ void Boid::showImGuiControls()
             s_boids.clear();
     }
 
-    if (ImGui::CollapsingHeader("Color")) {
-        ImGui::SliderFloat("Saturation", &color::saturation, 0.0f, 1.0f);
+    if (ImGui::CollapsingHeader("Color")) 
+    {
+        ImGui::SliderFloat("Saturation", &color::saturation, 0.003f, 1.0f); // Not letting it go to zero to avoid a zero division error in updateBoids
         ImGui::SameLine();
         ImGui::InputFloat("##SaturationInput", &color::saturation, 1.0f);
-        color::saturation = std::clamp(color::saturation, 0.0f, 1.0f);
+        color::saturation = std::clamp(color::saturation, 0.003f, 1.0f);
 
         ImGui::SliderFloat("Brightness", &color::brightness, 0.0f, 1.0f);
         ImGui::SameLine();
         ImGui::InputFloat("##BrightnessInput", &color::brightness, 1.0f);
         color::brightness = std::clamp(color::brightness, 0.0f, 1.0f);
+
+        if (ImGui::Button("Randomize Hues"))
+            randomizeHues();
     }
 
     ImGui::PopItemWidth();
@@ -325,8 +338,11 @@ void Boid::updateBoids(float deltaTime)
 
         primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
 
-        const float hueNoise{ rd::centeredDistribution(rd::randomNumberGenerator) };
-        primaryBoid.m_hue += hueNoise * 0.008f;
+        if (color::saturation < 0.7f)
+        {
+            const float hueNoise{ rd::centeredDistribution(rd::randomNumberGenerator) };
+            primaryBoid.m_hue += hueNoise * deltaTime;
+        }
 
         primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
     }
@@ -366,7 +382,7 @@ void Boid::renderAllBoids()
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.1f, 0.1f, 0.1f }));
         for (const Boid& boid : s_boids)
         {
-            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             glDrawArrays(GL_TRIANGLE_FAN, 0, settings::visionCone::vertices.size());
@@ -375,7 +391,7 @@ void Boid::renderAllBoids()
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.35f, 0.35f, 0.35f }));
         for (const Boid& boid : s_boids)
         {
-            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             glDrawArrays(GL_LINE_LOOP, 0, settings::visionCone::vertices.size());
@@ -387,7 +403,7 @@ void Boid::renderAllBoids()
     {
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(color::getRGBFromHue(boid.m_hue)));
 
-        glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+        glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
         model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
         glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -401,7 +417,7 @@ void Boid::renderAllBoids()
         for (const Boid& boid : s_boids)
         {
             glPointSize(s_triangleWidth / 1.5f);
-            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.getPos(), 0.0f }) };
+            glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
             glDrawArrays(GL_POINTS, 0, 1);

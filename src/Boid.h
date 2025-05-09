@@ -8,8 +8,6 @@
 class Boid
 {
     public:
-        static std::vector<Boid> s_boids;
-        static GLuint s_VAO;
         static void init();
         static void showImGuiControls();
         static void updateBoids(float deltaTime);
@@ -17,14 +15,13 @@ class Boid
         static void renderAllBoids();
 
         Boid(glm::vec2 pos);
-        glm::vec2 getPos() const { return m_pos; }
-        GLfloat getRotation() const { return -std::atan2(m_velocity.x, m_velocity.y); }
-        void setPos(glm::vec2 pos) { m_pos = pos; }
 
     private:
         glm::vec2 m_pos{ 0.0f };
         glm::vec2 m_velocity{ 0.0f };
         float m_hue{ 0.0f };
+
+        static std::vector<Boid> s_boids;
 
         static float s_triangleWidth;
         static float s_triangleHeight;
@@ -38,5 +35,9 @@ class Boid
         static float s_radius;
         static float s_visionAngleCos;
 
+        static GLuint s_VAO;
+
         static void recomputeStaticParams();
+        static void randomizeHues();
+        GLfloat getRotation() const { return -std::atan2(m_velocity.x, m_velocity.y); }
 };
