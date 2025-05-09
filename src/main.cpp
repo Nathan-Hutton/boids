@@ -12,6 +12,7 @@
 #include "ShaderHandler.h"
 #include "Input.h"
 #include "simulation/boid/Boid.h"
+#include "simulation/boid/BoidParams.h"
 #include "Camera.h"
 
 int main()
@@ -54,7 +55,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 460");
     ImGui::GetIO().IniFilename = nullptr;
 
-    simulation::boid::Boid::init();
+    simulation::boid::init();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);
