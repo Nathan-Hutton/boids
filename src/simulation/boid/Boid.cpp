@@ -1,6 +1,7 @@
 #include "Boid.h"
-#include "../Camera.h"
-#include "../ShaderHandler.h"
+#include "../../Camera.h"
+#include "../../ShaderHandler.h"
+#include "../UI.h"
 
 #include "imgui.h"
 
@@ -11,6 +12,7 @@
 #include <iostream>
 
 using Boid = simulation::boid::Boid;
+namespace ui = simulation::ui;
 
 std::vector<Boid> Boid::s_boids{};
 GLuint Boid::s_VAO{};
@@ -61,54 +63,33 @@ namespace rd
     std::uniform_real_distribution<float> centeredDistribution{-1.0f, 1.0f};
 }
 
-namespace settings
-{
-    float separationScale{ 1.0f };
-    float alignmentScale{ 1.0f };
-    float cohesionScale{ 1.0f };
-
-    float radiusScale{ 1.0f };
-    float visionAngleDegrees{ 270.0f };
-    float maxSpeedScale{ 1.0f };
-
-    namespace visionCone
-    {
-        bool showVisionCones{ false };
-        GLuint VAO{};
-        GLuint VBO{};
-        std::array<GLfloat, 104> vertices{ 0.0f }; // So really 51 vertices (including middle)
-    }
-
-    int numBoidsPerClick{ 1 };
-}
-
 void Boid::recomputeStaticParams()
 {
-    s_separation = settings::separationScale * (Camera::screenWidth * 0.15f);
-    s_alignment = settings::alignmentScale * (Camera::screenWidth * 0.15f);
-    s_cohesion = settings::cohesionScale * (Camera::screenWidth / 240.0f);
+    s_separation = ui::separationScale * (Camera::screenWidth * 0.15f);
+    s_alignment = ui::alignmentScale * (Camera::screenWidth * 0.15f);
+    s_cohesion = ui::cohesionScale * (Camera::screenWidth / 240.0f);
 
-    s_maxSpeed = (Camera::screenWidth / 10.0f) * settings::maxSpeedScale;
+    s_maxSpeed = (Camera::screenWidth / 10.0f) * ui::maxSpeedScale;
 
-    s_radius = (Camera::screenWidth / 20.0f) * settings::radiusScale;
-    s_visionAngleCos = glm::cos(glm::radians(settings::visionAngleDegrees) / 2.0f);
+    s_radius = (Camera::screenWidth / 20.0f) * ui::visionRadiusScale;
+    s_visionAngleCos = glm::cos(glm::radians(ui::visionAngleDegrees) / 2.0f);
 
     // Recompute vision cone vertices
-    const size_t numSegments{ (settings::visionCone::vertices.size() - 4) / 2 };
-    const GLfloat stepSize{ glm::radians(settings::visionAngleDegrees / static_cast<float>(numSegments)) };
-    const GLfloat startAngle{ glm::radians(((360.0f - settings::visionAngleDegrees) / 2.0f) - 90.0f) };
+    const size_t numSegments{ (ui::visionConeVertices.size() - 4) / 2 };
+    const GLfloat stepSize{ glm::radians(ui::visionAngleDegrees / static_cast<float>(numSegments)) };
+    const GLfloat startAngle{ glm::radians(((360.0f - ui::visionAngleDegrees) / 2.0f) - 90.0f) };
 
     size_t index{ 2 };
     for (size_t i{ 0 }; i <= numSegments; ++i)
     {
         const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
         const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * s_radius};
-        settings::visionCone::vertices[index++] = x;
-        settings::visionCone::vertices[index++] = y;
+        ui::visionConeVertices[index++] = x;
+        ui::visionConeVertices[index++] = y;
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, settings::visionCone::VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(settings::visionCone::vertices), settings::visionCone::vertices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, ui::visionConeVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ui::visionConeVertices), ui::visionConeVertices.data());
 }
 
 void Boid::randomizeHues()
@@ -147,12 +128,12 @@ void Boid::init()
     glBindVertexArray(0);
 
     // Boid vision cone/circle VAO. This is already initialized to zero
-    glGenVertexArrays(1, &settings::visionCone::VAO);
-    glBindVertexArray(settings::visionCone::VAO);
+    glGenVertexArrays(1, &ui::visionConeVAO);
+    glBindVertexArray(ui::visionConeVAO);
 
-    glGenBuffers(1, &settings::visionCone::VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, settings::visionCone::VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(settings::visionCone::vertices), settings::visionCone::vertices.data(), GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &ui::visionConeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, ui::visionConeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ui::visionConeVertices), ui::visionConeVertices.data(), GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
@@ -169,43 +150,43 @@ void Boid::showImGuiControls()
     if (ImGui::CollapsingHeader("Primary")) 
     {
         // Separation scale
-        changed |= ImGui::SliderFloat("Separation scale", &settings::separationScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Separation scale", &ui::separationScale, 0.0f, 8.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##SeparationInput", &settings::separationScale, 1.0f);
-        settings::separationScale = std::clamp(settings::separationScale, 0.0f, 8.0f);
+        changed |= ImGui::InputFloat("##SeparationInput", &ui::separationScale, 1.0f);
+        ui::separationScale = std::clamp(ui::separationScale, 0.0f, 8.0f);
 
         // Alignment scale
-        changed |= ImGui::SliderFloat("Alignment scale", &settings::alignmentScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Alignment scale", &ui::alignmentScale, 0.0f, 8.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##AlignmentInput", &settings::alignmentScale, 1.0f);
-        settings::alignmentScale = std::clamp(settings::alignmentScale, 0.0f, 8.0f);
+        changed |= ImGui::InputFloat("##AlignmentInput", &ui::alignmentScale, 1.0f);
+        ui::alignmentScale = std::clamp(ui::alignmentScale, 0.0f, 8.0f);
 
         // Cohesion scale
-        changed |= ImGui::SliderFloat("Cohesion scale", &settings::cohesionScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Cohesion scale", &ui::cohesionScale, 0.0f, 8.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##CohesionInput", &settings::cohesionScale, 1.0f);
-        settings::cohesionScale = std::clamp(settings::cohesionScale, 0.0f, 8.0f);
+        changed |= ImGui::InputFloat("##CohesionInput", &ui::cohesionScale, 1.0f);
+        ui::cohesionScale = std::clamp(ui::cohesionScale, 0.0f, 8.0f);
 
         // Max speed scale
-        changed |= ImGui::SliderFloat("Max speed scale", &settings::maxSpeedScale, 0.0f, 4.0f);
+        changed |= ImGui::SliderFloat("Max speed scale", &ui::maxSpeedScale, 0.0f, 4.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##MaxSpeedInput", &settings::maxSpeedScale, 0.5f);
-        settings::maxSpeedScale = std::clamp(settings::maxSpeedScale, 0.0f, 4.0f);
+        changed |= ImGui::InputFloat("##MaxSpeedInput", &ui::maxSpeedScale, 0.5f);
+        ui::maxSpeedScale = std::clamp(ui::maxSpeedScale, 0.0f, 4.0f);
     }
 
     if (ImGui::CollapsingHeader("Radius")) 
     {
-        ImGui::Checkbox("Show vision cones", &settings::visionCone::showVisionCones);
+        ImGui::Checkbox("Show vision cones", &ui::showVisionCones);
 
-        changed |= ImGui::SliderFloat("Radius scale", &settings::radiusScale, 0.0f, 8.0f);
+        changed |= ImGui::SliderFloat("Radius scale", &ui::visionRadiusScale, 0.0f, 8.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##RadiusInput", &settings::radiusScale, 1.0f);
-        settings::radiusScale = std::clamp(settings::radiusScale, 0.0f, 8.0f);
+        changed |= ImGui::InputFloat("##RadiusInput", &ui::visionRadiusScale, 1.0f);
+        ui::visionRadiusScale = std::clamp(ui::visionRadiusScale, 0.0f, 8.0f);
 
-        changed |= ImGui::SliderFloat("Vision angle (degrees)", &settings::visionAngleDegrees, 0.0f, 360.0f);
+        changed |= ImGui::SliderFloat("Vision angle (degrees)", &ui::visionAngleDegrees, 0.0f, 360.0f);
         ImGui::SameLine();
-        changed |= ImGui::InputFloat("##VisionAngleInput", &settings::visionAngleDegrees, 5.0f);
-        settings::visionAngleDegrees = std::clamp(settings::visionAngleDegrees, 0.0f, 360.0f);
+        changed |= ImGui::InputFloat("##VisionAngleInput", &ui::visionAngleDegrees, 5.0f);
+        ui::visionAngleDegrees = std::clamp(ui::visionAngleDegrees, 0.0f, 360.0f);
     }
 
     if (changed)
@@ -213,10 +194,10 @@ void Boid::showImGuiControls()
 
     if (ImGui::CollapsingHeader("Scene")) 
     {
-        ImGui::SliderInt("Boids per click", &settings::numBoidsPerClick, 1, 100);
+        ImGui::SliderInt("Boids per click", &ui::numBoidsPerClick, 1, 100);
         ImGui::SameLine();
-        ImGui::InputInt("##NumBoidsInput", &settings::numBoidsPerClick, 1);
-        settings::numBoidsPerClick = std::clamp(settings::numBoidsPerClick, 1, 100);
+        ImGui::InputInt("##NumBoidsInput", &ui::numBoidsPerClick, 1);
+        ui::numBoidsPerClick = std::clamp(ui::numBoidsPerClick, 1, 100);
 
         if (ImGui::Button("Clear boids"))
             s_boids.clear();
@@ -368,7 +349,7 @@ void Boid::updateBoids(float deltaTime)
 
 void Boid::createBoid(glm::vec2 pos)
 {
-    for (int i{ 0 }; i < settings::numBoidsPerClick; ++i)
+    for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
         s_boids.emplace_back(pos);
 }
 
@@ -376,9 +357,9 @@ void Boid::renderAllBoids()
 {
     // Remember that depth testing is off
     // First, render the vision cones, then the outlines, then the boids themselves, and finally m_pos as points
-    if (settings::visionCone::showVisionCones)
+    if (ui::showVisionCones)
     {
-        glBindVertexArray(settings::visionCone::VAO);
+        glBindVertexArray(ui::visionConeVAO);
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.1f, 0.1f, 0.1f }));
         for (const Boid& boid : s_boids)
@@ -386,7 +367,7 @@ void Boid::renderAllBoids()
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
-            glDrawArrays(GL_TRIANGLE_FAN, 0, settings::visionCone::vertices.size());
+            glDrawArrays(GL_TRIANGLE_FAN, 0, ui::visionConeVertices.size());
         }
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.35f, 0.35f, 0.35f }));
@@ -395,7 +376,7 @@ void Boid::renderAllBoids()
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
-            glDrawArrays(GL_LINE_LOOP, 0, settings::visionCone::vertices.size());
+            glDrawArrays(GL_LINE_LOOP, 0, ui::visionConeVertices.size());
         }
     }
 
@@ -411,9 +392,9 @@ void Boid::renderAllBoids()
     }
 
     // Render m_pos as a point so we can see exactly where the boids are visible in a render cone
-    if (settings::visionCone::showVisionCones)
+    if (ui::showVisionCones)
     {
-        glBindVertexArray(settings::visionCone::VAO);
+        glBindVertexArray(ui::visionConeVAO);
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 1.0f, 0.0f, 0.0f }));
         for (const Boid& boid : s_boids)
         {

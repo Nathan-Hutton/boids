@@ -11,7 +11,7 @@
 
 #include "ShaderHandler.h"
 #include "Input.h"
-#include "simulation/Boid.h"
+#include "simulation/boid/Boid.h"
 #include "Camera.h"
 
 int main()
