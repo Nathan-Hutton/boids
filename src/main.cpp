@@ -1,3 +1,10 @@
+#include "ShaderHandler.h"
+#include "Input.h"
+#include "simulation/boid/Boid.h"
+#include "simulation/boid/BoidParams.h"
+#include "simulation/UI.h"
+#include "Camera.h"
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -8,12 +15,6 @@
 #include "imgui_impl_opengl3.h"
 
 #include <iostream>
-
-#include "ShaderHandler.h"
-#include "Input.h"
-#include "simulation/boid/Boid.h"
-#include "simulation/boid/BoidParams.h"
-#include "Camera.h"
 
 int main()
 {
@@ -87,7 +88,7 @@ int main()
             showSettingsUI = !showSettingsUI;
 
         if (showSettingsUI)
-            simulation::boid::Boid::showImGuiControls();
+            simulation::ui::renderUI();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
