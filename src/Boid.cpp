@@ -27,8 +27,8 @@ float Boid::s_visionAngleCos{};
 
 namespace color
 {
-    constexpr float saturation{ 90.0f / 255.0f };
-    constexpr float brightness{ 200.0f / 255.0f };
+    float saturation{ 90.0f / 255.0f };
+    float brightness{ 200.0f / 255.0f };
 
     glm::vec3 getRGBFromHue(float hue)
     {
@@ -210,6 +210,18 @@ void Boid::showImGuiControls()
 
         if (ImGui::Button("Clear boids"))
             s_boids.clear();
+    }
+
+    if (ImGui::CollapsingHeader("Color")) {
+        ImGui::SliderFloat("Saturation", &color::saturation, 0.0f, 1.0f);
+        ImGui::SameLine();
+        ImGui::InputFloat("##SaturationInput", &color::saturation, 1.0f);
+        color::saturation = std::clamp(color::saturation, 0.0f, 1.0f);
+
+        ImGui::SliderFloat("Brightness", &color::brightness, 0.0f, 1.0f);
+        ImGui::SameLine();
+        ImGui::InputFloat("##BrightnessInput", &color::brightness, 1.0f);
+        color::brightness = std::clamp(color::brightness, 0.0f, 1.0f);
     }
 
     ImGui::PopItemWidth();
