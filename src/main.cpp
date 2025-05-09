@@ -54,7 +54,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 460");
     ImGui::GetIO().IniFilename = nullptr;
 
-    Boid::init();
+    simulation::boid::Boid::init();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);
@@ -73,20 +73,20 @@ int main()
         double xCursorPos, yCursorPos;
         ImGuiIO& io{ ImGui::GetIO() };
         if (!io.WantCaptureMouse && processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            Boid::createBoid({xCursorPos, yCursorPos});
+            simulation::boid::Boid::createBoid({xCursorPos, yCursorPos});
 
         // Handle boids
         const float currentTime{ static_cast<float>(glfwGetTime()) };
         const float deltaTime{ currentTime - lastUpdateTime };
         lastUpdateTime = currentTime;
-        Boid::updateBoids(deltaTime);
-        Boid::renderAllBoids();
+        simulation::boid::Boid::updateBoids(deltaTime);
+        simulation::boid::Boid::renderAllBoids();
 
         if (processPressingF1Key(window))
             showSettingsUI = !showSettingsUI;
 
         if (showSettingsUI)
-            Boid::showImGuiControls();
+            simulation::boid::Boid::showImGuiControls();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

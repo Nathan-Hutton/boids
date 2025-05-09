@@ -10,6 +10,8 @@
 #include <array>
 #include <iostream>
 
+using Boid = simulation::boid::Boid;
+
 std::vector<Boid> Boid::s_boids{};
 GLuint Boid::s_VAO{};
 float Boid::s_triangleWidth{};
