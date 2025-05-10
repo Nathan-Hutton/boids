@@ -106,7 +106,7 @@ namespace simulation::boid::globalVars
 
     void randomizeHues()
     {
-        for (Boid& boid : Boid::s_boids)
+        for (BoidObject& boid : BoidObject::s_boids)
             boid.setHue((rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f);
     }
 

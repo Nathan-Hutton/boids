@@ -1,6 +1,6 @@
 #include "ShaderHandler.h"
 #include "Input.h"
-#include "simulation/boid/Boid.h"
+#include "simulation/boid/BoidObject.h"
 #include "simulation/boid/BoidParams.h"
 #include "simulation/obstacle/Obstacle.h"
 #include "simulation/UI.h"
@@ -79,14 +79,14 @@ int main()
         double xCursorPos, yCursorPos;
         ImGuiIO& io{ ImGui::GetIO() };
         if (!io.WantCaptureMouse && processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            simulation::boid::Boid::createBoid({xCursorPos, yCursorPos});
+            simulation::boid::BoidObject::createBoid({xCursorPos, yCursorPos});
 
         // Handle boids
         const float currentTime{ static_cast<float>(glfwGetTime()) };
         const float deltaTime{ currentTime - lastUpdateTime };
         lastUpdateTime = currentTime;
-        simulation::boid::Boid::updateBoids(deltaTime);
-        simulation::boid::Boid::renderAllBoids();
+        simulation::boid::BoidObject::updateBoids(deltaTime);
+        simulation::boid::BoidObject::renderAllBoids();
         simulation::obstacle::Obstacle::renderAllObstacles();
 
         if (processPressingF1Key(window))

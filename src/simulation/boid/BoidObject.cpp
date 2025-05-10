@@ -1,4 +1,4 @@
-#include "Boid.h"
+#include "BoidObject.h"
 #include "BoidParams.h"
 #include "../../Camera.h"
 #include "../../ShaderHandler.h"
@@ -35,16 +35,16 @@ namespace
     }
 }
 
-std::vector<simulation::boid::Boid> simulation::boid::Boid::s_boids{};
+std::vector<simulation::boid::BoidObject> simulation::boid::BoidObject::s_boids{};
 
-void simulation::boid::Boid::updateBoids(float deltaTime)
+void simulation::boid::BoidObject::updateBoids(float deltaTime)
 {
     std::vector<glm::vec2> updatedVelocities(s_boids.size());
 
     // First, we filter out the neighboring boids that aren't actually neighbors (must be within radius and vision angle/cone)
     for (size_t i{ 0 }; i < s_boids.size(); ++i)
     {
-        Boid& primaryBoid{ s_boids[i] };
+        BoidObject& primaryBoid{ s_boids[i] };
         int numVisibleBoids{ 0 };
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
@@ -62,7 +62,7 @@ void simulation::boid::Boid::updateBoids(float deltaTime)
         for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
-            const Boid& otherBoid{ s_boids[j] };
+            const BoidObject& otherBoid{ s_boids[j] };
 
             glm::vec2 vecToOther{ otherBoid.m_pos - primaryBoid.m_pos };
 
@@ -145,7 +145,7 @@ void simulation::boid::Boid::updateBoids(float deltaTime)
 
     for (size_t i{ 0 }; i < s_boids.size(); ++i)
     {
-        Boid& boid{ s_boids[i] };
+        BoidObject& boid{ s_boids[i] };
 
         boid.m_velocity = updatedVelocities[i];
 
@@ -161,13 +161,13 @@ void simulation::boid::Boid::updateBoids(float deltaTime)
     }
 }
 
-void simulation::boid::Boid::createBoid(glm::vec2 pos)
+void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
 {
     for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
         s_boids.emplace_back(pos);
 }
 
-void simulation::boid::Boid::renderAllBoids()
+void simulation::boid::BoidObject::renderAllBoids()
 {
     // Remember that depth testing is off
     // First, render the vision cones, then the outlines, then the boids themselves, and finally m_pos as points
@@ -176,7 +176,7 @@ void simulation::boid::Boid::renderAllBoids()
         glBindVertexArray(ui::visionConeVAO);
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.1f, 0.1f, 0.1f }));
-        for (const Boid& boid : s_boids)
+        for (const BoidObject& boid : s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
@@ -185,7 +185,7 @@ void simulation::boid::Boid::renderAllBoids()
         }
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.35f, 0.35f, 0.35f }));
-        for (const Boid& boid : s_boids)
+        for (const BoidObject& boid : s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
@@ -195,7 +195,7 @@ void simulation::boid::Boid::renderAllBoids()
     }
 
     glBindVertexArray(globalVars::VAO);
-    for (const Boid& boid : s_boids)
+    for (const BoidObject& boid : s_boids)
     {
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(getRGBFromHue(boid.m_hue)));
 
@@ -210,7 +210,7 @@ void simulation::boid::Boid::renderAllBoids()
     {
         glBindVertexArray(ui::visionConeVAO);
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 1.0f, 0.0f, 0.0f }));
-        for (const Boid& boid : s_boids)
+        for (const BoidObject& boid : s_boids)
         {
             glPointSize(globalVars::triangleWidth / 1.5f);
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
@@ -221,7 +221,7 @@ void simulation::boid::Boid::renderAllBoids()
     }
 }
 
-simulation::boid::Boid::Boid(glm::vec2 pos)
+simulation::boid::BoidObject::BoidObject(glm::vec2 pos)
     : m_pos{ pos }
     , m_velocity{ glm::vec2{ 
         globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),

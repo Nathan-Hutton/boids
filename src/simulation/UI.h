@@ -2,7 +2,7 @@
 
 #include "boid/BoidParams.h"
 #include "../Camera.h"
-#include "boid/Boid.h"
+#include "boid/BoidObject.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -119,7 +119,7 @@ namespace simulation::ui
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
 
             if (ImGui::Button("Clear boids"))
-                boid::Boid::s_boids.clear();
+                boid::BoidObject::s_boids.clear();
         }
 
         // I'm not doing the changed bool thing here since there's not many computations going on

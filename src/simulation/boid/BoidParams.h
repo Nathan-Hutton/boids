@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Boid.h"
+#include "BoidObject.h"
 #include "../../Camera.h"
 
 #include <GL/glew.h>

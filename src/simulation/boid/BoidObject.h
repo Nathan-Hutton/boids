@@ -7,17 +7,17 @@
 
 namespace simulation::boid
 {
-    class Boid
+    class BoidObject
     {
         public:
-            static std::vector<Boid> s_boids;
+            static std::vector<BoidObject> s_boids;
 
             static void updateBoids(float deltaTime);
             static void createBoid(glm::vec2 pos);
             static void renderAllBoids();
             void setHue(float hue){ m_hue = hue; }
 
-            Boid(glm::vec2 pos);
+            BoidObject(glm::vec2 pos);
 
         private:
             glm::vec2 m_pos{ 0.0f };
