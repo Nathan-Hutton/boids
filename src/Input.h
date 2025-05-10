@@ -44,6 +44,23 @@ bool processPressingF1Key(GLFWwindow* window)
     return false;
 }
 
+bool processPressingSpace(GLFWwindow* window)
+{
+    static bool spaceKeyPressed{ false };
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        if (spaceKeyPressed)
+            return false;
+
+        spaceKeyPressed = true;
+        return true;
+    }
+
+    spaceKeyPressed = false;
+    return false;
+}
+
 void resize_window(GLFWwindow* window, int width, int height)
 {
     (void)window; // This just gets rid of the unused parameter warning

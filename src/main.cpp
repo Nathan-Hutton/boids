@@ -78,8 +78,17 @@ int main()
 
         double xCursorPos, yCursorPos;
         ImGuiIO& io{ ImGui::GetIO() };
+
+        if (processPressingSpace(window))
+            simulation::ui::placingBoids = !simulation::ui::placingBoids;
+
         if (!io.WantCaptureMouse && processMouseInputClicking(window, &xCursorPos, &yCursorPos))
-            simulation::boid::BoidObject::createBoid({xCursorPos, yCursorPos});
+        {
+            if (simulation::ui::placingBoids)
+                simulation::boid::BoidObject::createBoid({xCursorPos, yCursorPos});
+            else
+                simulation::obstacle::Obstacle::createObstacle({xCursorPos, yCursorPos});
+        }
 
         // Handle boids
         const float currentTime{ static_cast<float>(glfwGetTime()) };

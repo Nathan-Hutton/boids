@@ -13,6 +13,7 @@
 
 namespace simulation::ui
 {
+    inline bool placingBoids{ true };
     // *****
     // Boids
     // *****
@@ -117,6 +118,8 @@ namespace simulation::ui
             ImGui::SameLine();
             ImGui::InputInt("##NumBoidsInput", &numBoidsPerClick, 1);
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
+
+            ImGui::Checkbox("Placing boids", &placingBoids);
 
             if (ImGui::Button("Clear boids"))
                 boid::BoidObject::s_boids.clear();
