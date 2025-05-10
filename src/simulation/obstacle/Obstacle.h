@@ -18,6 +18,7 @@ namespace simulation::obstacle
             static void renderAllObstacles();
 
             Obstacle(glm::vec2 pos) : m_pos{ pos } {}
+            glm::vec2 getPos() const { return m_pos; }
 
         private:
             glm::vec2 m_pos{ 0.0f };

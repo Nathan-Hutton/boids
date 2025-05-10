@@ -3,6 +3,7 @@
 #include "../../Camera.h"
 #include "../../ShaderHandler.h"
 #include "../UI.h"
+#include "../obstacle/Obstacle.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -49,7 +50,7 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
         glm::vec2 steeringForce{ 0.0f };
-        glm::vec2 noise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 1.5f), globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 1.5f) };
+        glm::vec2 noise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 3.0f), globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 3.0f) };
         steeringForce += noise;
 
         glm::vec2 separationForce{ 0.0f };
@@ -93,6 +94,23 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             hueCosSum += cos(hueAngle);
         }
 
+        glm::vec2 avoidObstacleForce{ 0.0f };
+        for (const obstacle::Obstacle& obstacle : obstacle::Obstacle::s_obstacles)
+        {
+            const glm::vec2 vecToBoid{ primaryBoid.m_pos - obstacle.getPos() };
+            const float distance{ glm::length(vecToBoid) };
+
+            if (distance > 0 && distance < obstacle::radius * 15.0f)
+            {
+                const glm::vec2 dirToVec{ glm::normalize(vecToBoid) };
+                //const float falloff{ glm::clamp((obstacle::radius * 7.0f - distance) / (obstacle::radius * 7.0f), 0.0f, 1.0f) };
+                const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
+                avoidObstacleForce += dirToVec * falloff;
+                //avoidObstacleForce += dirToVec / distance;
+            }
+        }
+        steeringForce += avoidObstacleForce * 1000.0f;
+
         if (numVisibleBoids == 0)
         {
             updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
@@ -111,7 +129,7 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         cohesionForce = (cohesionForce - primaryBoid.m_pos) * globalVars::cohesion;
 
         // Update positions and velocities
-        steeringForce += separationForce + alignmentForce + cohesionForce + noise;
+        steeringForce += separationForce + alignmentForce + cohesionForce;
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
 
         if (glm::length(updatedVelocity) > globalVars::maxSpeed)
