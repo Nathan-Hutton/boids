@@ -4,8 +4,6 @@
 #include "../../ShaderHandler.h"
 #include "../UI.h"
 
-#include "imgui.h"
-
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>

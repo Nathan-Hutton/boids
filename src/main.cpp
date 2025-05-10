@@ -2,6 +2,7 @@
 #include "Input.h"
 #include "simulation/boid/Boid.h"
 #include "simulation/boid/BoidParams.h"
+#include "simulation/obstacle/Obstacle.h"
 #include "simulation/UI.h"
 #include "Camera.h"
 
@@ -57,9 +58,12 @@ int main()
     ImGui::GetIO().IniFilename = nullptr;
 
     simulation::boid::globalVars::init();
+    simulation::obstacle::init();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);
+
+    simulation::obstacle::Obstacle::createObstacle({500.0f, 500.0f});
 
     bool showSettingsUI{ false };
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
@@ -83,6 +87,7 @@ int main()
         lastUpdateTime = currentTime;
         simulation::boid::Boid::updateBoids(deltaTime);
         simulation::boid::Boid::renderAllBoids();
+        simulation::obstacle::Obstacle::renderAllObstacles();
 
         if (processPressingF1Key(window))
             showSettingsUI = !showSettingsUI;
