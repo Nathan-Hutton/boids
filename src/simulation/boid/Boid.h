@@ -10,6 +10,8 @@ namespace simulation::boid
     class Boid
     {
         public:
+            static std::vector<Boid> s_boids;
+
             static void updateBoids(float deltaTime);
             static void createBoid(glm::vec2 pos);
             static void renderAllBoids();

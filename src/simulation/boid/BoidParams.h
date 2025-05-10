@@ -6,11 +6,12 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <vector>
 
-namespace simulation::boid
+#include <vector>
+#include <random>
+
+namespace simulation::boid::globalVars
 {
-    extern std::vector<Boid> boids;
     extern GLuint VAO;
     extern float triangleWidth;
     extern float triangleHeight;
@@ -32,7 +33,14 @@ namespace simulation::boid
     extern float saturation;
     extern float brightness;
 
-    void recomputeVisionConeVBO();
     void init();
+    void recomputeVisionConeVBO();
     void randomizeHues();
+
+    namespace rd
+    {
+        extern std::random_device rd;
+        extern std::mt19937 randomNumberGenerator;
+        extern std::uniform_real_distribution<float> centeredDistribution;
+    }
 }

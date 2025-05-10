@@ -56,7 +56,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 460");
     ImGui::GetIO().IniFilename = nullptr;
 
-    simulation::boid::init();
+    simulation::boid::globalVars::init();
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);

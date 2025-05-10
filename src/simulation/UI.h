@@ -2,6 +2,7 @@
 
 #include "boid/BoidParams.h"
 #include "../Camera.h"
+#include "boid/Boid.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -50,7 +51,7 @@ namespace simulation::ui
             if (changed)
             {
                 separationScale = std::clamp(separationScale, 0.0f, 8.0f);
-                boid::separation = boid::defaultSeparation * separationScale;
+                boid::globalVars::separation = boid::globalVars::defaultSeparation * separationScale;
             }
 
             // Alignment scale
@@ -60,7 +61,7 @@ namespace simulation::ui
             if (changed)
             {
                 alignmentScale = std::clamp(alignmentScale, 0.0f, 8.0f);
-                boid::alignment = boid::defaultAlignment * alignmentScale;
+                boid::globalVars::alignment = boid::globalVars::defaultAlignment * alignmentScale;
             }
 
             // Cohesion scale
@@ -70,7 +71,7 @@ namespace simulation::ui
             if (changed)
             {
                 cohesionScale = std::clamp(cohesionScale, 0.0f, 8.0f);
-                boid::cohesion = boid::defaultCohesion * cohesionScale;
+                boid::globalVars::cohesion = boid::globalVars::defaultCohesion * cohesionScale;
             }
 
             // Max speed scale
@@ -80,7 +81,7 @@ namespace simulation::ui
             if (changed)
             {
                 maxSpeedScale = std::clamp(maxSpeedScale, 0.0f, 4.0f);
-                boid::maxSpeed = boid::defaultMaxSpeed * maxSpeedScale;
+                boid::globalVars::maxSpeed = boid::globalVars::defaultMaxSpeed * maxSpeedScale;
             }
         }
 
@@ -94,8 +95,8 @@ namespace simulation::ui
             if (changed)
             {
                 visionRadiusScale = std::clamp(visionRadiusScale, 0.0f, 8.0f);
-                boid::visionRadius = boid::defaultVisionRadius * visionRadiusScale;
-                boid::recomputeVisionConeVBO();
+                boid::globalVars::visionRadius = boid::globalVars::defaultVisionRadius * visionRadiusScale;
+                boid::globalVars::recomputeVisionConeVBO();
             }
 
             changed = ImGui::SliderFloat("Vision angle (degrees)", &visionAngleDegrees, 0.0f, 360.0f);
@@ -104,8 +105,8 @@ namespace simulation::ui
             if (changed)
             {
                 visionAngleDegrees = std::clamp(visionAngleDegrees, 0.0f, 360.0f);
-                boid::visionAngleCos = glm::cos(glm::radians(visionAngleDegrees) / 2.0f);
-                boid::recomputeVisionConeVBO();
+                boid::globalVars::visionAngleCos = glm::cos(glm::radians(visionAngleDegrees) / 2.0f);
+                boid::globalVars::recomputeVisionConeVBO();
             }
         }
 
@@ -118,24 +119,24 @@ namespace simulation::ui
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
 
             if (ImGui::Button("Clear boids"))
-                boid::boids.clear();
+                boid::Boid::s_boids.clear();
         }
 
         // I'm not doing the changed bool thing here since there's not many computations going on
         if (ImGui::CollapsingHeader("Color")) 
         {
-            ImGui::SliderFloat("Saturation", &boid::saturation, 0.003f, 1.0f); // Not letting it go to zero to avoid a zero division error in updateBoids
+            ImGui::SliderFloat("Saturation", &boid::globalVars::saturation, 0.003f, 1.0f); // Not letting it go to zero to avoid a zero division error in updateBoids
             ImGui::SameLine();
-            ImGui::InputFloat("##SaturationInput", &boid::saturation, 1.0f);
-            boid::saturation = std::clamp(boid::saturation, 0.003f, 1.0f);
+            ImGui::InputFloat("##SaturationInput", &boid::globalVars::saturation, 1.0f);
+            boid::globalVars::saturation = std::clamp(boid::globalVars::saturation, 0.003f, 1.0f);
 
-            ImGui::SliderFloat("Brightness", &boid::brightness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Brightness", &boid::globalVars::brightness, 0.0f, 1.0f);
             ImGui::SameLine();
-            ImGui::InputFloat("##BrightnessInput", &boid::brightness, 1.0f);
-            boid::brightness = std::clamp(boid::brightness, 0.0f, 1.0f);
+            ImGui::InputFloat("##BrightnessInput", &boid::globalVars::brightness, 1.0f);
+            boid::globalVars::brightness = std::clamp(boid::globalVars::brightness, 0.0f, 1.0f);
 
             if (ImGui::Button("Randomize Hues"))
-                boid::randomizeHues();
+                boid::globalVars::randomizeHues();
         }
 
         ImGui::PopItemWidth();

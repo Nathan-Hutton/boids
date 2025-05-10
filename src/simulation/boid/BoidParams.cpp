@@ -3,16 +3,8 @@
 
 #include <random>
 
-namespace
+namespace simulation::boid::globalVars
 {
-    std::random_device rd;
-    std::mt19937 randomNumberGenerator{rd()};
-    std::uniform_real_distribution<float> centeredDistribution{-1.0f, 1.0f};
-}
-
-namespace simulation::boid
-{
-    std::vector<Boid> boids{};
     GLuint VAO{};
     float triangleWidth{};
     float triangleHeight{};
@@ -33,26 +25,6 @@ namespace simulation::boid
 
     float saturation{ 90.0f / 255.0f };
     float brightness{ 200.0f / 255.0f };
-
-    void recomputeVisionConeVBO()
-    {
-        // Recompute vision cone vertices
-        const size_t numSegments{ (ui::visionConeVertices.size() - 4) / 2 };
-        const GLfloat stepSize{ glm::radians(ui::visionAngleDegrees / static_cast<float>(numSegments)) };
-        const GLfloat startAngle{ glm::radians(((360.0f - ui::visionAngleDegrees) / 2.0f) - 90.0f) };
-
-        size_t index{ 2 };
-        for (size_t i{ 0 }; i <= numSegments; ++i)
-        {
-            const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * visionRadius};
-            const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * visionRadius};
-            ui::visionConeVertices[index++] = x;
-            ui::visionConeVertices[index++] = y;
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, ui::visionConeVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ui::visionConeVertices), ui::visionConeVertices.data());
-    }
 
     void init()
     {
@@ -112,9 +84,36 @@ namespace simulation::boid
         recomputeVisionConeVBO();
     }
 
+    void recomputeVisionConeVBO()
+    {
+        // Recompute vision cone vertices
+        const size_t numSegments{ (ui::visionConeVertices.size() - 4) / 2 };
+        const GLfloat stepSize{ glm::radians(ui::visionAngleDegrees / static_cast<float>(numSegments)) };
+        const GLfloat startAngle{ glm::radians(((360.0f - ui::visionAngleDegrees) / 2.0f) - 90.0f) };
+
+        size_t index{ 2 };
+        for (size_t i{ 0 }; i <= numSegments; ++i)
+        {
+            const GLfloat x{glm::cos(startAngle + (stepSize * static_cast<float>(i))) * visionRadius};
+            const GLfloat y{glm::sin(startAngle + (stepSize * static_cast<float>(i))) * visionRadius};
+            ui::visionConeVertices[index++] = x;
+            ui::visionConeVertices[index++] = y;
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, ui::visionConeVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ui::visionConeVertices), ui::visionConeVertices.data());
+    }
+
     void randomizeHues()
     {
-        for (Boid& boid : boids)
-            boid.setHue((centeredDistribution(randomNumberGenerator) + 1.0f) / 2.0f);
+        for (Boid& boid : Boid::s_boids)
+            boid.setHue((rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f);
+    }
+
+    namespace rd
+    {
+        std::random_device rd;
+        std::mt19937 randomNumberGenerator{rd()};
+        std::uniform_real_distribution<float> centeredDistribution{-1.0f, 1.0f};
     }
 }

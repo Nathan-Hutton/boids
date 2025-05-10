@@ -12,8 +12,6 @@
 #include <array>
 #include <iostream>
 
-using Boid = simulation::boid::Boid;
-
 namespace
 {
     glm::vec3 getRGBFromHue(float hue)
@@ -21,44 +19,39 @@ namespace
         const float h{ hue * 6.0f };
         const int i{ int(floor(h)) };
         const float f{ h - i };
-        const float p{ simulation::boid::brightness * (1.0f - simulation::boid::saturation) };
-        const float q{ simulation::boid::brightness * (1.0f - simulation::boid::saturation * f) };
-        const float t{ simulation::boid::brightness * (1.0f - simulation::boid::saturation * (1.0f - f)) };
+        const float p{ simulation::boid::globalVars::brightness * (1.0f - simulation::boid::globalVars::saturation) };
+        const float q{ simulation::boid::globalVars::brightness * (1.0f - simulation::boid::globalVars::saturation * f) };
+        const float t{ simulation::boid::globalVars::brightness * (1.0f - simulation::boid::globalVars::saturation * (1.0f - f)) };
 
         switch (i % 6)
         {
-            case 0 : return { simulation::boid::brightness, t, q };
-            case 1 : return { q, simulation::boid::brightness, p };
-            case 2 : return { p, simulation::boid::brightness, t };
-            case 3 : return { p, q, simulation::boid::brightness };
-            case 4 : return { t, p, simulation::boid::brightness };
-            case 5 : return { simulation::boid::brightness, p, q };
+            case 0 : return { simulation::boid::globalVars::brightness, t, q };
+            case 1 : return { q, simulation::boid::globalVars::brightness, p };
+            case 2 : return { p, simulation::boid::globalVars::brightness, t };
+            case 3 : return { p, q, simulation::boid::globalVars::brightness };
+            case 4 : return { t, p, simulation::boid::globalVars::brightness };
+            case 5 : return { simulation::boid::globalVars::brightness, p, q };
         }
 
         return { 0.0f, 0.0f, 0.0f };
     }
 }
 
-namespace rd
-{
-    std::random_device rd;
-    std::mt19937 randomNumberGenerator{rd()};
-    std::uniform_real_distribution<float> centeredDistribution{-1.0f, 1.0f};
-}
+std::vector<simulation::boid::Boid> simulation::boid::Boid::s_boids{};
 
-void Boid::updateBoids(float deltaTime)
+void simulation::boid::Boid::updateBoids(float deltaTime)
 {
-    std::vector<glm::vec2> updatedVelocities(boids.size());
+    std::vector<glm::vec2> updatedVelocities(s_boids.size());
 
     // First, we filter out the neighboring boids that aren't actually neighbors (must be within radius and vision angle/cone)
-    for (size_t i{ 0 }; i < boids.size(); ++i)
+    for (size_t i{ 0 }; i < s_boids.size(); ++i)
     {
-        Boid& primaryBoid{ boids[i] };
+        Boid& primaryBoid{ s_boids[i] };
         int numVisibleBoids{ 0 };
         glm::vec2 updatedVelocity{ primaryBoid.m_velocity };
 
         glm::vec2 steeringForce{ 0.0f };
-        glm::vec2 noise{ rd::centeredDistribution(rd::randomNumberGenerator) * (maxSpeed * 1.5f), rd::centeredDistribution(rd::randomNumberGenerator) * (maxSpeed * 1.5f) };
+        glm::vec2 noise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 1.5f), globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) * (globalVars::maxSpeed * 1.5f) };
         steeringForce += noise;
 
         glm::vec2 separationForce{ 0.0f };
@@ -68,10 +61,10 @@ void Boid::updateBoids(float deltaTime)
         float hueSinSum{ 0.0f };
         float hueCosSum{ 0.0f };
 
-        for (size_t j{ 0 }; j < boids.size(); ++j)
+        for (size_t j{ 0 }; j < s_boids.size(); ++j)
         {
             if (i == j) continue;
-            const Boid& otherBoid{ boids[j] };
+            const Boid& otherBoid{ s_boids[j] };
 
             glm::vec2 vecToOther{ otherBoid.m_pos - primaryBoid.m_pos };
 
@@ -82,13 +75,13 @@ void Boid::updateBoids(float deltaTime)
                 vecToOther.y -= glm::sign(vecToOther.y) * Camera::screenHeight;
 
             const float distance{ glm::length(vecToOther) };
-            if (distance > visionRadius || distance < 1e-6) continue;
+            if (distance > globalVars::visionRadius || distance < 1e-6) continue;
 
             const glm::vec2 dirToOther{ glm::normalize(vecToOther) };
-            if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < visionAngleCos) continue;
+            if (glm::dot(glm::normalize(primaryBoid.m_velocity), dirToOther) < globalVars::visionAngleCos) continue;
             ++numVisibleBoids;
 
-            const float strength{ glm::clamp((visionRadius - distance) / visionRadius, 0.0f, 1.0f) };
+            const float strength{ glm::clamp((globalVars::visionRadius - distance) / globalVars::visionRadius, 0.0f, 1.0f) };
             separationForce += -dirToOther * strength;
 
             //alignmentForce += otherBoid.m_velocity * strength;
@@ -110,21 +103,21 @@ void Boid::updateBoids(float deltaTime)
         }
 
         // Separation
-        separationForce *= separation;
+        separationForce *= globalVars::separation;
 
         // Alignment
-        alignmentForce *= alignment;
+        alignmentForce *= globalVars::alignment;
 
         // Cohesion
         cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * cohesion;
+        cohesionForce = (cohesionForce - primaryBoid.m_pos) * globalVars::cohesion;
 
         // Update positions and velocities
         steeringForce += separationForce + alignmentForce + cohesionForce + noise;
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
 
-        if (glm::length(updatedVelocity) > maxSpeed)
-            updatedVelocity = glm::normalize(updatedVelocity) * maxSpeed;
+        if (glm::length(updatedVelocity) > globalVars::maxSpeed)
+            updatedVelocity = glm::normalize(updatedVelocity) * globalVars::maxSpeed;
 
         updatedVelocities[i] = updatedVelocity;
 
@@ -143,40 +136,40 @@ void Boid::updateBoids(float deltaTime)
 
         primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
 
-        if (boid::saturation < 0.7f)
+        if (globalVars::saturation < 0.7f)
         {
-            const float hueNoise{ rd::centeredDistribution(rd::randomNumberGenerator) };
+            const float hueNoise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) };
             primaryBoid.m_hue += hueNoise * deltaTime;
         }
 
         primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
     }
 
-    for (size_t i{ 0 }; i < boids.size(); ++i)
+    for (size_t i{ 0 }; i < s_boids.size(); ++i)
     {
-        Boid& boid{ boids[i] };
+        Boid& boid{ s_boids[i] };
 
         boid.m_velocity = updatedVelocities[i];
 
         boid.m_pos += boid.m_velocity * deltaTime;
-        if (boid.m_pos.y - triangleHeight > Camera::screenHeight)
-            boid.m_pos.y -= Camera::screenHeight + triangleHeight;
-        if (boid.m_pos.y + triangleHeight < 0)
-            boid.m_pos.y += Camera::screenHeight + triangleHeight;
-        if (boid.m_pos.x - triangleHeight > Camera::screenWidth)
-            boid.m_pos.x -= Camera::screenWidth + triangleHeight;
-        if (boid.m_pos.x + triangleHeight < 0)
-            boid.m_pos.x += Camera::screenWidth + triangleHeight;
+        if (boid.m_pos.y - globalVars::triangleHeight > Camera::screenHeight)
+            boid.m_pos.y -= Camera::screenHeight + globalVars::triangleHeight;
+        if (boid.m_pos.y + globalVars::triangleHeight < 0)
+            boid.m_pos.y += Camera::screenHeight + globalVars::triangleHeight;
+        if (boid.m_pos.x - globalVars::triangleHeight > Camera::screenWidth)
+            boid.m_pos.x -= Camera::screenWidth + globalVars::triangleHeight;
+        if (boid.m_pos.x + globalVars::triangleHeight < 0)
+            boid.m_pos.x += Camera::screenWidth + globalVars::triangleHeight;
     }
 }
 
-void Boid::createBoid(glm::vec2 pos)
+void simulation::boid::Boid::createBoid(glm::vec2 pos)
 {
     for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
-        boids.emplace_back(pos);
+        s_boids.emplace_back(pos);
 }
 
-void Boid::renderAllBoids()
+void simulation::boid::Boid::renderAllBoids()
 {
     // Remember that depth testing is off
     // First, render the vision cones, then the outlines, then the boids themselves, and finally m_pos as points
@@ -185,7 +178,7 @@ void Boid::renderAllBoids()
         glBindVertexArray(ui::visionConeVAO);
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.1f, 0.1f, 0.1f }));
-        for (const Boid& boid : boids)
+        for (const Boid& boid : s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
@@ -194,7 +187,7 @@ void Boid::renderAllBoids()
         }
 
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.35f, 0.35f, 0.35f }));
-        for (const Boid& boid : boids)
+        for (const Boid& boid : s_boids)
         {
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
@@ -203,8 +196,8 @@ void Boid::renderAllBoids()
         }
     }
 
-    glBindVertexArray(VAO);
-    for (const Boid& boid : boids)
+    glBindVertexArray(globalVars::VAO);
+    for (const Boid& boid : s_boids)
     {
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(getRGBFromHue(boid.m_hue)));
 
@@ -219,9 +212,9 @@ void Boid::renderAllBoids()
     {
         glBindVertexArray(ui::visionConeVAO);
         glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 1.0f, 0.0f, 0.0f }));
-        for (const Boid& boid : boids)
+        for (const Boid& boid : s_boids)
         {
-            glPointSize(triangleWidth / 1.5f);
+            glPointSize(globalVars::triangleWidth / 1.5f);
             glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
             model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });
             glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
@@ -230,11 +223,11 @@ void Boid::renderAllBoids()
     }
 }
 
-Boid::Boid(glm::vec2 pos)
+simulation::boid::Boid::Boid(glm::vec2 pos)
     : m_pos{ pos }
     , m_velocity{ glm::vec2{ 
-        rd::centeredDistribution(rd::randomNumberGenerator),
-        rd::centeredDistribution(rd::randomNumberGenerator) 
-    } * (maxSpeed * 0.25f) }
-    , m_hue{ (rd::centeredDistribution(rd::randomNumberGenerator) + 1.0f) / 2.0f }
+        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
+        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
+    } * (globalVars::maxSpeed * 0.25f) }
+    , m_hue{ (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f }
 {}
