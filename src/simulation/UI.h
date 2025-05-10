@@ -3,6 +3,7 @@
 #include "boid/BoidParams.h"
 #include "../Camera.h"
 #include "boid/BoidObject.h"
+#include "obstacle/Obstacle.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -112,20 +113,35 @@ namespace simulation::ui
         }
 
         // I'm not doing the changed bool thing here since there's not many computations going on
-        if (ImGui::CollapsingHeader("Scene")) 
+        if (ImGui::CollapsingHeader("Boids")) 
         {
             ImGui::SliderInt("Boids per click", &numBoidsPerClick, 1, 100);
             ImGui::SameLine();
             ImGui::InputInt("##NumBoidsInput", &numBoidsPerClick, 1);
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
 
-            ImGui::Checkbox("Placing boids", &placingBoids);
-
             if (ImGui::Button("Clear boids"))
                 boid::BoidObject::s_boids.clear();
         }
 
-        // I'm not doing the changed bool thing here since there's not many computations going on
+        if (ImGui::CollapsingHeader("Obstacles"))
+        {
+            ImGui::Checkbox("Placing boids", &placingBoids);
+
+            changed = ImGui::SliderFloat("Radius scale", &obstacleRadiusScale, 0.1f, 8.0f);
+            ImGui::SameLine();
+            changed |= ImGui::InputFloat("##RadiusInput", &obstacleRadiusScale, 1.0f);
+            if (changed)
+            {
+                obstacleRadiusScale = std::clamp(obstacleRadiusScale, 0.1f, 8.0f);
+                obstacle::radius = obstacle::defaultRadius * obstacleRadiusScale;
+                obstacle::recomputeVBO();
+            }
+
+            if (ImGui::Button("Clear obstacles"))
+                obstacle::Obstacle::s_obstacles.clear();
+        }
+
         if (ImGui::CollapsingHeader("Color")) 
         {
             ImGui::SliderFloat("Saturation", &boid::globalVars::saturation, 0.003f, 1.0f); // Not letting it go to zero to avoid a zero division error in updateBoids

@@ -12,6 +12,7 @@ namespace simulation::obstacle
 {
     std::vector<Obstacle> Obstacle::s_obstacles{};
     std::array<GLfloat, 104> vertices{};
+    float defaultRadius{};
     float radius{};
     GLuint VAO{};
     GLuint VBO{};
@@ -19,7 +20,8 @@ namespace simulation::obstacle
 
 void simulation::obstacle::init()
 {
-    radius = Camera::screenWidth / 100.0f;
+    defaultRadius = Camera::screenWidth / 100.0f;
+    radius = defaultRadius;
 
     // Boid vision cone/circle VAO. This is already initialized to zero
     glGenVertexArrays(1, &VAO);

@@ -63,8 +63,6 @@ int main()
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);
 
-    simulation::obstacle::Obstacle::createObstacle({500.0f, 500.0f});
-
     bool showSettingsUI{ false };
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
     while (!glfwWindowShouldClose(window))

@@ -23,6 +23,7 @@ namespace simulation::obstacle
             glm::vec2 m_pos{ 0.0f };
     };
 
+    extern float defaultRadius;
     extern float radius;
     extern GLuint VAO, VBO;
     extern std::array<GLfloat, 104> vertices; // So really 51 vertices (including middle)
