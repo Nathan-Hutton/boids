@@ -14,28 +14,25 @@
 
 using Boid = simulation::boid::Boid;
 
-namespace color
+namespace
 {
-    float saturation{ 90.0f / 255.0f };
-    float brightness{ 200.0f / 255.0f };
-
     glm::vec3 getRGBFromHue(float hue)
     {
         const float h{ hue * 6.0f };
         const int i{ int(floor(h)) };
         const float f{ h - i };
-        const float p{ brightness * (1.0f - saturation) };
-        const float q{ brightness * (1.0f - saturation * f) };
-        const float t{ brightness * (1.0f - saturation * (1.0f - f)) };
+        const float p{ simulation::boid::brightness * (1.0f - simulation::boid::saturation) };
+        const float q{ simulation::boid::brightness * (1.0f - simulation::boid::saturation * f) };
+        const float t{ simulation::boid::brightness * (1.0f - simulation::boid::saturation * (1.0f - f)) };
 
         switch (i % 6)
         {
-            case 0 : return { brightness, t, q };
-            case 1 : return { q, brightness, p };
-            case 2 : return { p, brightness, t };
-            case 3 : return { p, q, brightness };
-            case 4 : return { t, p, brightness };
-            case 5 : return { brightness, p, q };
+            case 0 : return { simulation::boid::brightness, t, q };
+            case 1 : return { q, simulation::boid::brightness, p };
+            case 2 : return { p, simulation::boid::brightness, t };
+            case 3 : return { p, q, simulation::boid::brightness };
+            case 4 : return { t, p, simulation::boid::brightness };
+            case 5 : return { simulation::boid::brightness, p, q };
         }
 
         return { 0.0f, 0.0f, 0.0f };
@@ -146,7 +143,7 @@ void Boid::updateBoids(float deltaTime)
 
         primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
 
-        if (color::saturation < 0.7f)
+        if (boid::saturation < 0.7f)
         {
             const float hueNoise{ rd::centeredDistribution(rd::randomNumberGenerator) };
             primaryBoid.m_hue += hueNoise * deltaTime;
@@ -209,7 +206,7 @@ void Boid::renderAllBoids()
     glBindVertexArray(VAO);
     for (const Boid& boid : boids)
     {
-        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(color::getRGBFromHue(boid.m_hue)));
+        glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(getRGBFromHue(boid.m_hue)));
 
         glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ boid.m_pos, 0.0f }) };
         model = glm::rotate(model, boid.getRotation(), glm::vec3{ 0.0f, 0.0f, 1.0f });

@@ -15,19 +15,24 @@ namespace simulation::boid
     extern float triangleWidth;
     extern float triangleHeight;
 
+    extern float defaultSeparation;
     extern float separation;
+    extern float defaultAlignment;
     extern float alignment;
+    extern float defaultCohesion;
     extern float cohesion;
 
+    extern float defaultMaxSpeed;
     extern float maxSpeed;
 
+    extern float defaultVisionRadius;
     extern float visionRadius;
     extern float visionAngleCos;
 
     extern float saturation;
     extern float brightness;
 
-    void recomputeGlobalBoidParams();
+    void recomputeVisionConeVBO();
     void init();
     void randomizeHues();
 }
