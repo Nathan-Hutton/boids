@@ -184,8 +184,17 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
 
 void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
 {
+    float hue{};
+    if (ui::groupBoidsShareSameHue)
+        hue = (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f;
+
     for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
-        s_boids.emplace_back(pos);
+    {
+        if (!ui::groupBoidsShareSameHue)
+            hue = (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f;
+
+        s_boids.emplace_back(pos, hue);
+    }
 }
 
 void simulation::boid::BoidObject::renderAllBoids()
@@ -242,11 +251,11 @@ void simulation::boid::BoidObject::renderAllBoids()
     }
 }
 
-simulation::boid::BoidObject::BoidObject(glm::vec2 pos)
+simulation::boid::BoidObject::BoidObject(glm::vec2 pos, float hue)
     : m_pos{ pos }
     , m_velocity{ glm::vec2{ 
         globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
         globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
     } * (globalVars::maxSpeed * 0.25f) }
-    , m_hue{ (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f }
+    , m_hue{ hue }
 {}
