@@ -74,13 +74,14 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        double xCursorPos, yCursorPos;
         ImGuiIO& io{ ImGui::GetIO() };
 
         if (processPressingSpace(window))
             simulation::ui::placingBoids = !simulation::ui::placingBoids;
 
-        if (!io.WantCaptureMouse && processMouseInputClicking(window, &xCursorPos, &yCursorPos))
+        double xCursorPos, yCursorPos;
+        glfwGetCursorPos(window, &xCursorPos, &yCursorPos);
+        if (!io.WantCaptureMouse && processMouseInputClicking(window))
         {
             if (simulation::ui::placingBoids)
                 simulation::boid::BoidObject::createBoid({xCursorPos, yCursorPos});
@@ -95,6 +96,16 @@ int main()
         simulation::boid::BoidObject::updateBoids(deltaTime);
         simulation::boid::BoidObject::renderAllBoids();
         simulation::obstacle::Obstacle::renderAllObstacles();
+
+        if (!simulation::ui::placingBoids)
+        {
+            glBindVertexArray(simulation::obstacle::VAO);
+            glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 0.5f, 0.0f, 0.0f }));
+
+            const glm::mat4 model{ glm::translate(glm::mat4{ 1.0f }, glm::vec3{ xCursorPos, yCursorPos, 0.0f }) };
+            glUniformMatrix4fv(glGetUniformLocation(ShaderHandler::shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(Camera::viewProjection * model));
+            glDrawArrays(GL_TRIANGLE_FAN, 0, simulation::obstacle::vertices.size());
+        }
 
         if (processPressingF1Key(window))
             showSettingsUI = !showSettingsUI;

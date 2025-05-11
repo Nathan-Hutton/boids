@@ -9,7 +9,7 @@ void processKeyboardInputExit(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 }
 
-bool processMouseInputClicking(GLFWwindow* window, double* xCursorPos, double* yCursorPos)
+bool processMouseInputClicking(GLFWwindow* window)
 {
     static bool isClicking{ false };
 
@@ -22,7 +22,6 @@ bool processMouseInputClicking(GLFWwindow* window, double* xCursorPos, double* y
     if (isClicking)
         return false;
 
-    glfwGetCursorPos(window, xCursorPos, yCursorPos);
     isClicking = true;
     return true;
 }

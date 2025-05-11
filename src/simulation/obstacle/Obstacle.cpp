@@ -79,7 +79,7 @@ void simulation::obstacle::Obstacle::createObstacle(glm::vec2 pos)
 void simulation::obstacle::Obstacle::renderAllObstacles()
 {
     glBindVertexArray(VAO);
-    glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{1.0f, 0.0f, 0.0f}));
+    glUniform3fv(glGetUniformLocation(ShaderHandler::shaderProgram, "color"), 1, glm::value_ptr(glm::vec3{ 1.0f, 0.0f, 0.0f }));
 
     for (const Obstacle& obstacle : s_obstacles)
     {
