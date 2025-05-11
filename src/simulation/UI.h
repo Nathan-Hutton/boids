@@ -31,8 +31,9 @@ namespace simulation::ui
     inline GLuint visionConeVBO{};
     inline std::array<GLfloat, 104> visionConeVertices{ 0.0f }; // So really 51 vertices (including middle)
 
-    inline bool groupBoidsShareSameHue{ false };
     inline int numBoidsPerClick{ 1 };
+    inline bool randomizeGroupBoidPositions{ false };
+    inline bool groupBoidsShareSameHue{ false };
 
     inline bool blendHues{ true };
 
@@ -123,6 +124,7 @@ namespace simulation::ui
             ImGui::InputInt("##NumBoidsInput", &numBoidsPerClick, 1);
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
 
+            ImGui::Checkbox("Randomize group boid positions", &randomizeGroupBoidPositions);
             ImGui::Checkbox("Boids in group share same hue", &groupBoidsShareSameHue);
 
             if (ImGui::Button("Clear boids"))
