@@ -100,16 +100,16 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 vecToBoid{ primaryBoid.m_pos - obstacle.getPos() };
             const float distance{ glm::length(vecToBoid) };
 
-            if (distance > 0 && distance < obstacle::radius * 20.0f)
+            if (distance > 0 && distance < obstacle::radius * 15.0f)
             {
                 const glm::vec2 dirToVec{ glm::normalize(vecToBoid) };
                 //const float falloff{ glm::clamp((obstacle::radius * 7.0f - distance) / (obstacle::radius * 7.0f), 0.0f, 1.0f) };
-                const float falloff = glm::pow(glm::clamp((obstacle::radius * 20.0f - distance) / (obstacle::radius * 20.0f), 0.0f, 1.0f), 2.0f);
+                const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
                 avoidObstacleForce += dirToVec * falloff;
                 //avoidObstacleForce += dirToVec / distance;
             }
         }
-        steeringForce += avoidObstacleForce * 1000.0f;
+        steeringForce += avoidObstacleForce * 2000.0f;
 
         if (numVisibleBoids == 0)
         {
@@ -133,6 +133,9 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
 
         // Update positions and velocities
         steeringForce += separationForce + alignmentForce + cohesionForce;
+        if (glm::length(steeringForce) > Camera::screenWidth / 3.0f)
+            steeringForce = glm::normalize(steeringForce) * Camera::screenWidth / 3.0f;
+
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
 
         if (glm::length(updatedVelocity) > globalVars::maxSpeed)
