@@ -190,9 +190,7 @@ void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
         return;
     }
 
-    float hue{};
-    if (ui::groupBoidsShareSameHue)
-        hue = (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f;
+    float hue{ (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f };
 
     for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
     {
