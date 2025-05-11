@@ -33,6 +33,7 @@ namespace simulation::ui
 
     inline int numBoidsPerClick{ 1 };
     inline bool randomizeGroupBoidPositions{ false };
+    inline bool groupBoidsPointInSameDir{ true };
     inline bool groupBoidsShareSameHue{ false };
 
     inline bool blendHues{ true };
@@ -125,6 +126,15 @@ namespace simulation::ui
             numBoidsPerClick = std::clamp(numBoidsPerClick, 1, 100);
 
             ImGui::Checkbox("Randomize group boid positions", &randomizeGroupBoidPositions);
+
+            if (!randomizeGroupBoidPositions)
+                ImGui::BeginDisabled();
+
+            ImGui::Checkbox("Group points share heading", &groupBoidsPointInSameDir);
+
+            if (!randomizeGroupBoidPositions)
+                ImGui::EndDisabled();
+
             ImGui::Checkbox("Boids in group share same hue", &groupBoidsShareSameHue);
 
             if (ImGui::Button("Clear boids"))

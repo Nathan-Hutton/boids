@@ -17,7 +17,7 @@ namespace simulation::boid
             static void renderAllBoids();
             void setHue(float hue){ m_hue = hue; }
 
-            BoidObject(glm::vec2 pos, float hue);
+            BoidObject(glm::vec2 pos, glm::vec2 velocity, float hue);
 
         private:
             glm::vec2 m_pos{ 0.0f };

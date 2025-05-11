@@ -184,13 +184,18 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
 
 void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
 {
-    if (ui::numBoidsPerClick == 1)
-    {
-        s_boids.emplace_back(pos, (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f);
-        return;
-    }
+    glm::vec2 velocity{ glm::vec2{ 
+        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
+        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
+    } * (globalVars::maxSpeed * 0.25f) };
 
     float hue{ (globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) + 1.0f) / 2.0f };
+
+    if (ui::numBoidsPerClick == 1)
+    {
+        s_boids.emplace_back(pos, velocity, hue);
+        return;
+    }
 
     for (int i{ 0 }; i < ui::numBoidsPerClick; ++i)
     {
@@ -199,19 +204,30 @@ void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
 
         if (!ui::randomizeGroupBoidPositions)
         {
-            s_boids.emplace_back(pos, hue);
+            velocity = glm::vec2{ 
+                globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
+                globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
+            } * (globalVars::maxSpeed * 0.25f);
+
+            s_boids.emplace_back(pos, velocity, hue);
             continue;
         }
 
-        const glm::vec2 posNoise
-        { 
+        const glm::vec2 posNoise { 
             glm::vec2
             {
                 globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
                 globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
-            } * Camera::screenWidth / static_cast<float>(120 - ui::numBoidsPerClick)
+            } * Camera::screenWidth / 10.0f
         };
-        s_boids.emplace_back(pos + posNoise, hue);
+
+        if (!ui::groupBoidsPointInSameDir)
+            velocity = glm::vec2{ 
+                globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
+                globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
+            } * (globalVars::maxSpeed * 0.25f);
+
+        s_boids.emplace_back(pos + posNoise, velocity, hue);
     }
 }
 
@@ -269,11 +285,8 @@ void simulation::boid::BoidObject::renderAllBoids()
     }
 }
 
-simulation::boid::BoidObject::BoidObject(glm::vec2 pos, float hue)
+simulation::boid::BoidObject::BoidObject(glm::vec2 pos, glm::vec2 velocity, float hue)
     : m_pos{ pos }
-    , m_velocity{ glm::vec2{ 
-        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
-        globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
-    } * (globalVars::maxSpeed * 0.25f) }
+    , m_velocity{ velocity }
     , m_hue{ hue }
 {}
