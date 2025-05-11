@@ -209,7 +209,7 @@ void simulation::boid::BoidObject::createBoid(glm::vec2 pos)
             {
                 globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator),
                 globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) 
-            } * Camera::screenWidth / 20.0f
+            } * Camera::screenWidth / static_cast<float>(120 - ui::numBoidsPerClick)
         };
         s_boids.emplace_back(pos + posNoise, hue);
     }
