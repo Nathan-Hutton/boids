@@ -159,9 +159,6 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
         }
 
-        if (glm::length(steeringForce) > Camera::screenWidth / 3.0f)
-            steeringForce = glm::normalize(steeringForce) * Camera::screenWidth / 3.0f;
-
         updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
 
         if (glm::length(updatedVelocity) > globalVars::maxSpeed)
