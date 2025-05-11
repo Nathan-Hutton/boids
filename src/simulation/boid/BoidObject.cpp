@@ -138,6 +138,9 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         updatedVelocities[i] = updatedVelocity;
 
         // Update hue
+        if (!ui::blendHues)
+            continue;
+
         float avgHueAngle{ static_cast<float>(atan2(hueSinSum, hueCosSum)) };
         if (avgHueAngle < 0.0f)
             avgHueAngle += glm::two_pi<float>();

@@ -33,6 +33,8 @@ namespace simulation::ui
 
     inline int numBoidsPerClick{ 1 };
 
+    inline bool blendHues{ true };
+
     // *********
     // Obstacles
     // *********
@@ -153,6 +155,8 @@ namespace simulation::ui
             ImGui::SameLine();
             ImGui::InputFloat("##BrightnessInput", &boid::globalVars::brightness, 1.0f);
             boid::globalVars::brightness = std::clamp(boid::globalVars::brightness, 0.0f, 1.0f);
+
+            ImGui::Checkbox("Blend hues", &blendHues);
 
             if (ImGui::Button("Randomize Hues"))
                 boid::globalVars::randomizeHues();
