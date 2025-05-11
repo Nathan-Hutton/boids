@@ -41,7 +41,6 @@ void simulation::obstacle::init()
 
 void simulation::obstacle::recomputeVBO()
 {
-    // Recompute vision cone vertices
     constexpr size_t numSegments{ (vertices.size() - 4) / 2 };
     constexpr GLfloat stepSize{ glm::two_pi<float>() / static_cast<float>(numSegments) };
 
@@ -56,6 +55,20 @@ void simulation::obstacle::recomputeVBO()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+}
+
+void simulation::obstacle::makeBigCircleObstacle()
+{
+    constexpr int numObstacles{ 100 };
+    constexpr GLfloat stepSize{ glm::two_pi<float>() / static_cast<float>(numObstacles) };
+    const float bigCirlceRadius{ (Camera::screenHeight / 2.0f) * (7.0f / 8.0f) };
+
+    for (size_t i{ 0 }; i < numObstacles; ++i)
+    {
+        const GLfloat x{(Camera::screenWidth / 2.0f) + glm::cos((stepSize * static_cast<float>(i))) * bigCirlceRadius};
+        const GLfloat y{(Camera::screenHeight / 2.0f) + glm::sin((stepSize * static_cast<float>(i))) * bigCirlceRadius};
+        Obstacle::createObstacle({x, y});
+    }
 }
 
 void simulation::obstacle::Obstacle::createObstacle(glm::vec2 pos)

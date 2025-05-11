@@ -155,6 +155,9 @@ namespace simulation::ui
                 obstacle::recomputeVBO();
             }
 
+            if (ImGui::Button("Create obstacle circle"))
+                obstacle::makeBigCircleObstacle();
+
             if (ImGui::Button("Clear obstacles"))
                 obstacle::Obstacle::s_obstacles.clear();
         }
