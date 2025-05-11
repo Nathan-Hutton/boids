@@ -97,6 +97,7 @@ int main()
         simulation::boid::BoidObject::renderAllBoids();
         simulation::obstacle::Obstacle::renderAllObstacles();
 
+        // Show a translucent version of an obstacle where the cursor is if we're in the placing obstacles mode
         if (!simulation::ui::placingBoids)
         {
             glBindVertexArray(simulation::obstacle::VAO);

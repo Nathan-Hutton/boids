@@ -111,28 +111,54 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         }
         steeringForce += avoidObstacleForce * 2000.0f;
 
-        if (numVisibleBoids == 0)
+        if (numVisibleBoids > 0)
         {
-            updatedVelocity = primaryBoid.m_velocity + steeringForce * deltaTime;
-            if (glm::length(updatedVelocity) > globalVars::maxSpeed)
-                updatedVelocity = glm::normalize(updatedVelocity) * globalVars::maxSpeed;
+            // *************
+            // Update forces
+            // *************
 
-            updatedVelocities[i] = updatedVelocity;
-            continue;
+            // Separation
+            separationForce *= globalVars::separation;
+
+            // Alignment
+            alignmentForce *= globalVars::alignment;
+
+            // Cohesion
+            cohesionForce /= numVisibleBoids;
+            cohesionForce = (cohesionForce - primaryBoid.m_pos) * globalVars::cohesion;
+
+            // Update positions and velocities
+            steeringForce += separationForce + alignmentForce + cohesionForce;
+
+            // **********
+            // Update hue
+            // **********
+            if (!ui::blendHues)
+                continue;
+
+            float avgHueAngle{ static_cast<float>(atan2(hueSinSum, hueCosSum)) };
+            if (avgHueAngle < 0.0f)
+                avgHueAngle += glm::two_pi<float>();
+
+            const float avgHue{ avgHueAngle / glm::two_pi<float>() };
+
+            float hueDelta{ avgHue - primaryBoid.m_hue };
+            if (hueDelta > 0.5f) 
+                hueDelta -= 1.0f;
+            else if (hueDelta < -0.5f) 
+                hueDelta += 1.0f;
+
+            primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
+
+            if (globalVars::saturation < 0.7f)
+            {
+                const float hueNoise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) };
+                primaryBoid.m_hue += hueNoise * deltaTime;
+            }
+
+            primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
         }
 
-        // Separation
-        separationForce *= globalVars::separation;
-
-        // Alignment
-        alignmentForce *= globalVars::alignment;
-
-        // Cohesion
-        cohesionForce /= numVisibleBoids;
-        cohesionForce = (cohesionForce - primaryBoid.m_pos) * globalVars::cohesion;
-
-        // Update positions and velocities
-        steeringForce += separationForce + alignmentForce + cohesionForce;
         if (glm::length(steeringForce) > Camera::screenWidth / 3.0f)
             steeringForce = glm::normalize(steeringForce) * Camera::screenWidth / 3.0f;
 
@@ -142,32 +168,6 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             updatedVelocity = glm::normalize(updatedVelocity) * globalVars::maxSpeed;
 
         updatedVelocities[i] = updatedVelocity;
-
-        // Update hue
-        if (!ui::blendHues)
-            continue;
-
-        float avgHueAngle{ static_cast<float>(atan2(hueSinSum, hueCosSum)) };
-        if (avgHueAngle < 0.0f)
-            avgHueAngle += glm::two_pi<float>();
-
-        const float avgHue{ avgHueAngle / glm::two_pi<float>() };
-
-        float hueDelta{ avgHue - primaryBoid.m_hue };
-        if (hueDelta > 0.5f) 
-            hueDelta -= 1.0f;
-        else if (hueDelta < -0.5f) 
-            hueDelta += 1.0f;
-
-        primaryBoid.m_hue += hueDelta * 3.0f * deltaTime;
-
-        if (globalVars::saturation < 0.7f)
-        {
-            const float hueNoise{ globalVars::rd::centeredDistribution(globalVars::rd::randomNumberGenerator) };
-            primaryBoid.m_hue += hueNoise * deltaTime;
-        }
-
-        primaryBoid.m_hue = std::fmod(primaryBoid.m_hue + 1.0f, 1.0f);
     }
 
     for (size_t i{ 0 }; i < s_boids.size(); ++i)
