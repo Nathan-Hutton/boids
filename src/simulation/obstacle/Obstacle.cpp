@@ -20,7 +20,7 @@ namespace simulation::obstacle
 
 void simulation::obstacle::init()
 {
-    defaultRadius = Camera::screenWidth / 100.0f;
+    defaultRadius = Camera::screenWidth / 150.0f;
     radius = defaultRadius;
 
     // Boid vision cone/circle VAO. This is already initialized to zero
