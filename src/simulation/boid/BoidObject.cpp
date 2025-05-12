@@ -150,8 +150,8 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
                 else
                     tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
 
-                const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
-                avoidObstacleForce += blendedAvoidDir * falloff;
+                const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.2f + dirToBoid * 0.8f) };
+                avoidObstacleForce += blendedAvoidDir * falloff * ui::avoidMouseScale;
             }
         }
 

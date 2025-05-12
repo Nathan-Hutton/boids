@@ -44,6 +44,7 @@ namespace simulation::ui
     inline float obstacleRadiusScale{ 1.0f };
 
     inline bool avoidMouse{ false };
+    inline float avoidMouseScale{ 1.0f };
 
     inline void renderUI()
     {
@@ -148,6 +149,11 @@ namespace simulation::ui
             ImGui::Checkbox("Placing boids", &placingBoids);
 
             ImGui::Checkbox("Avoid mouse", &avoidMouse);
+            changed = ImGui::SliderFloat("Avoid mouse scale", &avoidMouseScale, 0.1f, 20.0f);
+            ImGui::SameLine();
+            changed |= ImGui::InputFloat("##AvoidMouseScaleInput", &avoidMouseScale, 1.0f);
+            if (changed)
+                avoidMouseScale = std::clamp(avoidMouseScale, 0.1f, 20.0f);
 
             changed = ImGui::SliderFloat("Radius scale", &obstacleRadiusScale, 0.1f, 8.0f);
             ImGui::SameLine();
