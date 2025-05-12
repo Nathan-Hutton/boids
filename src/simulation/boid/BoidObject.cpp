@@ -101,25 +101,27 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 vecToBoid{ lookAheadPos - obstacle.getPos() };
             const float distance{ glm::length(vecToBoid) };
 
-            if (distance > 0 && distance < obstacle::radius * 15.0f)
-            {
-                const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
-                const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
+            if (distance <= 0 || distance >= obstacle::radius * 15.0f)
+                continue;
 
-                const glm::vec2 heading{ glm::normalize(primaryBoid.m_velocity) };
-                const float side{ heading.x * dirToBoid.y - heading.y * dirToBoid.x };
+            const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
+            const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
 
-                glm::vec2 tangentDir;
-                if (side < 0.0f)
-                    tangentDir = glm::vec2{ -dirToBoid.y, dirToBoid.x };
-                else
-                    tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
+            const glm::vec2 heading{ glm::normalize(primaryBoid.m_velocity) };
+            const float side{ heading.x * dirToBoid.y - heading.y * dirToBoid.x };
 
-                //avoidObstacleForce += dirToBoid * falloff;
-                avoidObstacleForce += tangentDir * falloff;
-            }
+            glm::vec2 tangentDir;
+            if (side < 0.0f)
+                tangentDir = glm::vec2{ -dirToBoid.y, dirToBoid.x };
+            else
+                tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
+
+            //avoidObstacleForce += dirToBoid * falloff;
+            glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.7f + dirToBoid * 0.3f) };
+            //avoidObstacleForce += tangentDir * falloff;
+            avoidObstacleForce += blendedAvoidDir * falloff;
         }
-        steeringForce += avoidObstacleForce * 2000.0f;
+        steeringForce += avoidObstacleForce * 1500.0f;
 
         if (numVisibleBoids > 0)
         {
