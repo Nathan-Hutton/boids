@@ -107,6 +107,14 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
             const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
 
+            // This is here so that if the boid is about to directly hit a wall of obstacles, it won't rely on tengential forces to avoid it
+            // because those tangential forces would average out to 0 to make it just pass through the wall
+            if (falloff > 0.8f)
+            {
+                avoidObstacleForce += dirToBoid * falloff * 10.0f;
+                continue;
+            }
+
             const glm::vec2 heading{ glm::normalize(primaryBoid.m_velocity) };
             const float side{ heading.x * dirToBoid.y - heading.y * dirToBoid.x };
 
@@ -117,10 +125,7 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
                 tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
 
             const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
-            if (glm::dot(heading, -dirToBoid) > 0.0f)
-                avoidObstacleForce += blendedAvoidDir * falloff;
-            else
-                avoidObstacleForce += dirToBoid * falloff * 0.3f;
+            avoidObstacleForce += blendedAvoidDir * falloff;
         }
         steeringForce += avoidObstacleForce * 1500.0f;
 
