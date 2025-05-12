@@ -128,7 +128,7 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
             avoidObstacleForce += blendedAvoidDir * falloff;
         }
-        steeringForce += avoidObstacleForce * 1200.0f;
+        steeringForce += avoidObstacleForce * (Camera::screenWidth * 0.625f);
 
         if (numVisibleBoids > 0)
         {
