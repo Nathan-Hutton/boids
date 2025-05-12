@@ -116,10 +116,11 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             else
                 tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
 
-            //avoidObstacleForce += dirToBoid * falloff;
-            glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.7f + dirToBoid * 0.3f) };
-            //avoidObstacleForce += tangentDir * falloff;
-            avoidObstacleForce += blendedAvoidDir * falloff;
+            const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
+            if (glm::dot(heading, -dirToBoid) > 0.0f)
+                avoidObstacleForce += blendedAvoidDir * falloff;
+            else
+                avoidObstacleForce += dirToBoid * falloff * 0.3f;
         }
         steeringForce += avoidObstacleForce * 1500.0f;
 
