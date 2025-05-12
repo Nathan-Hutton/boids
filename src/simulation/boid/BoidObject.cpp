@@ -97,16 +97,26 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         glm::vec2 avoidObstacleForce{ 0.0f };
         for (const obstacle::Obstacle& obstacle : obstacle::Obstacle::s_obstacles)
         {
-            const glm::vec2 vecToBoid{ primaryBoid.m_pos - obstacle.getPos() };
+            const glm::vec2 lookAheadPos{ primaryBoid.m_pos + primaryBoid.m_velocity * deltaTime };
+            const glm::vec2 vecToBoid{ lookAheadPos - obstacle.getPos() };
             const float distance{ glm::length(vecToBoid) };
 
             if (distance > 0 && distance < obstacle::radius * 15.0f)
             {
-                const glm::vec2 dirToVec{ glm::normalize(vecToBoid) };
-                //const float falloff{ glm::clamp((obstacle::radius * 7.0f - distance) / (obstacle::radius * 7.0f), 0.0f, 1.0f) };
+                const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
                 const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
-                avoidObstacleForce += dirToVec * falloff;
-                //avoidObstacleForce += dirToVec / distance;
+
+                const glm::vec2 heading{ glm::normalize(primaryBoid.m_velocity) };
+                const float side{ heading.x * dirToBoid.y - heading.y * dirToBoid.x };
+
+                glm::vec2 tangentDir;
+                if (side < 0.0f)
+                    tangentDir = glm::vec2{ -dirToBoid.y, dirToBoid.x };
+                else
+                    tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
+
+                //avoidObstacleForce += dirToBoid * falloff;
+                avoidObstacleForce += tangentDir * falloff;
             }
         }
         steeringForce += avoidObstacleForce * 2000.0f;
