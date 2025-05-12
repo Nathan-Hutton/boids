@@ -101,17 +101,18 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 vecToBoid{ lookAheadPos - obstacle.getPos() };
             const float distance{ glm::length(vecToBoid) };
 
-            if (distance <= 0 || distance >= obstacle::radius * 15.0f)
+            if (distance <= 0 || distance >= obstacle::radius * 12.5f)
                 continue;
 
             const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
-            const float falloff = glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f);
+            //const float falloff{ glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f) };
+            const float falloff{ glm::smoothstep(obstacle::radius * 12.5f, obstacle::radius, distance) };
 
             // This is here so that if the boid is about to directly hit a wall of obstacles, it won't rely on tengential forces to avoid it
             // because those tangential forces would average out to 0 to make it just pass through the wall
-            if (falloff > 0.8f)
+            if (falloff > 0.965f)
             {
-                avoidObstacleForce += dirToBoid * falloff * 10.0f;
+                avoidObstacleForce += dirToBoid * falloff * 12.0f;
                 continue;
             }
 
@@ -127,7 +128,7 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
             avoidObstacleForce += blendedAvoidDir * falloff;
         }
-        steeringForce += avoidObstacleForce * 1500.0f;
+        steeringForce += avoidObstacleForce * 1200.0f;
 
         if (numVisibleBoids > 0)
         {
