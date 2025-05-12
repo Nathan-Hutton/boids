@@ -37,7 +37,7 @@ int main()
     glViewport(0, 0, mode->width, mode->height);
     glfwSetFramebufferSizeCallback(window, resize_window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    Camera::init(static_cast<float>(mode->width), static_cast<float>(mode->height));
+    Camera::init(window, static_cast<float>(mode->width), static_cast<float>(mode->height));
 
     if (glfwRawMouseMotionSupported())
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);

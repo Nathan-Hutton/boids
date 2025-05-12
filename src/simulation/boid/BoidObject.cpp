@@ -94,10 +94,11 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             hueCosSum += cos(hueAngle);
         }
 
+        // Obstacle avoidance
         glm::vec2 avoidObstacleForce{ 0.0f };
+        const glm::vec2 lookAheadPos{ primaryBoid.m_pos + primaryBoid.m_velocity * deltaTime };
         for (const obstacle::Obstacle& obstacle : obstacle::Obstacle::s_obstacles)
         {
-            const glm::vec2 lookAheadPos{ primaryBoid.m_pos + primaryBoid.m_velocity * deltaTime };
             const glm::vec2 vecToBoid{ lookAheadPos - obstacle.getPos() };
             const float distance{ glm::length(vecToBoid) };
 
@@ -105,7 +106,6 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
                 continue;
 
             const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
-            //const float falloff{ glm::pow(glm::clamp((obstacle::radius * 15.0f - distance) / (obstacle::radius * 15.0f), 0.0f, 1.0f), 2.0f) };
             const float falloff{ glm::smoothstep(obstacle::radius * 12.5f, obstacle::radius, distance) };
 
             // This is here so that if the boid is about to directly hit a wall of obstacles, it won't rely on tengential forces to avoid it
@@ -128,6 +128,33 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
             const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
             avoidObstacleForce += blendedAvoidDir * falloff;
         }
+
+        if (ui::avoidMouse)
+        {
+            double xCursorPos, yCursorPos;
+            glfwGetCursorPos(Camera::window, &xCursorPos, &yCursorPos);
+            const glm::vec2 vecToBoid{ lookAheadPos - glm::vec2{ static_cast<float>(xCursorPos), static_cast<float>(yCursorPos) } };
+            const float distance{ glm::length(vecToBoid) };
+
+            if (distance > 0 || distance < obstacle::radius * 15.0f)
+            {
+                const glm::vec2 dirToBoid{ glm::normalize(vecToBoid) };
+                const float falloff{ glm::smoothstep(obstacle::radius * 15.0f, obstacle::radius, distance) };
+
+                const glm::vec2 heading{ glm::normalize(primaryBoid.m_velocity) };
+                const float side{ heading.x * dirToBoid.y - heading.y * dirToBoid.x };
+
+                glm::vec2 tangentDir;
+                if (side < 0.0f)
+                    tangentDir = glm::vec2{ -dirToBoid.y, dirToBoid.x };
+                else
+                    tangentDir = glm::vec2{ dirToBoid.y, -dirToBoid.x };
+
+                const glm::vec2 blendedAvoidDir{ glm::normalize(tangentDir * 0.5f + dirToBoid * 0.5f) };
+                avoidObstacleForce += blendedAvoidDir * falloff;
+            }
+        }
+
         steeringForce += avoidObstacleForce * (Camera::screenWidth * 0.625f);
 
         if (numVisibleBoids > 0)

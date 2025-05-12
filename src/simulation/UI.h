@@ -43,6 +43,8 @@ namespace simulation::ui
     // *********
     inline float obstacleRadiusScale{ 1.0f };
 
+    inline bool avoidMouse{ false };
+
     inline void renderUI()
     {
         ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -144,6 +146,8 @@ namespace simulation::ui
         if (ImGui::CollapsingHeader("Obstacles"))
         {
             ImGui::Checkbox("Placing boids", &placingBoids);
+
+            ImGui::Checkbox("Avoid mouse", &avoidMouse);
 
             changed = ImGui::SliderFloat("Radius scale", &obstacleRadiusScale, 0.1f, 8.0f);
             ImGui::SameLine();

@@ -9,9 +9,11 @@ namespace Camera
     glm::vec2 cameraCenter{ 0.0f };
     float screenWidth{ 0.0f };
     float screenHeight{ 0.0f };
+    GLFWwindow* window{};
     
-    void init(float screenWidth, float screenHeight)
+    void init(GLFWwindow* window, float screenWidth, float screenHeight)
     {
+        Camera::window = window;
         Camera::screenWidth = screenWidth;
         Camera::screenHeight = screenHeight;
         cameraCenter = glm::vec2{ screenWidth / 2.0f, screenHeight / 2.0f };
