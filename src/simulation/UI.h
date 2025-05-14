@@ -46,6 +46,32 @@ namespace simulation::ui
     inline bool avoidMouse{ false };
     inline float avoidMouseScale{ 1.0f };
 
+    namespace cursors
+    {
+        constexpr int cursorSize{ 16 };
+
+        inline void initCursors() {
+            ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+
+            unsigned char cursorPixels[cursorSize * cursorSize * 4];
+            for (int i = 0; i < cursorSize * cursorSize; ++i) 
+            {
+                cursorPixels[i * 4 + 0] = 255; // Red
+                cursorPixels[i * 4 + 1] = 0;   // Green
+                cursorPixels[i * 4 + 2] = 0;   // Blue
+                cursorPixels[i * 4 + 3] = 255; // Alpha (fully opaque)
+            }
+
+            GLFWimage image;
+            image.width = cursorSize;
+            image.height = cursorSize;
+            image.pixels = cursorPixels;
+
+            GLFWcursor* redCursor = glfwCreateCursor(&image, cursorSize / 2, cursorSize / 2); // hotspot in center
+            glfwSetCursor(Camera::window, redCursor);
+        }
+    }
+
     inline void renderUI()
     {
         ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);

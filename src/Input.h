@@ -60,6 +60,23 @@ bool processPressingSpace(GLFWwindow* window)
     return false;
 }
 
+bool processPressingAlt(GLFWwindow* window)
+{
+    static bool altKeyPressed{ false };
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+    {
+        if (altKeyPressed)
+            return false;
+
+        altKeyPressed = true;
+        return true;
+    }
+
+    altKeyPressed = false;
+    return false;
+}
+
 void resize_window(GLFWwindow* window, int width, int height)
 {
     (void)window; // This just gets rid of the unused parameter warning
