@@ -64,24 +64,6 @@ int main()
     glUseProgram(ShaderHandler::shaderProgram);
 
     simulation::ui::cursors::initCursors();
-    //const int cursorSize{ 16 };
-    //unsigned char cursorPixels[cursorSize * cursorSize * 4];
-
-    //for (int i = 0; i < cursorSize * cursorSize; ++i) 
-    //{
-    //    cursorPixels[i * 4 + 0] = 255; // Red
-    //    cursorPixels[i * 4 + 1] = 0;   // Green
-    //    cursorPixels[i * 4 + 2] = 0;   // Blue
-    //    cursorPixels[i * 4 + 3] = 255; // Alpha (fully opaque)
-    //}
-
-    //GLFWimage image;
-    //image.width = cursorSize;
-    //image.height = cursorSize;
-    //image.pixels = cursorPixels;
-
-    //GLFWcursor* redCursor = glfwCreateCursor(&image, cursorSize / 2, cursorSize / 2); // hotspot in center
-    //glfwSetCursor(window, redCursor);
 
     bool showSettingsUI{ false };
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
@@ -101,21 +83,11 @@ int main()
 
         if (processPressingAlt(window))
         {
-            //for (int i = 0; i < cursorSize * cursorSize; ++i) 
-            //{
-            //    cursorPixels[i * 4 + 0] = 0; // Red
-            //    cursorPixels[i * 4 + 1] = 255;   // Green
-            //    cursorPixels[i * 4 + 2] = 0;   // Blue
-            //    cursorPixels[i * 4 + 3] = 255; // Alpha (fully opaque)
-            //}
-            //GLFWimage image;
-            //image.width = cursorSize;
-            //image.height = cursorSize;
-            //image.pixels = cursorPixels;
-
-            //GLFWcursor* redCursor = glfwCreateCursor(&image, cursorSize / 2, cursorSize / 2); // hotspot in center
-            //glfwSetCursor(window, redCursor);
             simulation::ui::avoidMouse = !simulation::ui::avoidMouse;
+            if (simulation::ui::avoidMouse)
+                glfwSetCursor(window, simulation::ui::cursors::redCursor);
+            else
+                glfwSetCursor(window, simulation::ui::cursors::whiteCursor);
         }
 
         double xCursorPos, yCursorPos;

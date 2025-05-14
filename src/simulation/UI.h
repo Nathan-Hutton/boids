@@ -12,6 +12,10 @@
 #include <array>
 #include <iostream>
 
+#include "../lodepng.h"
+
+#include "../stb_image_resize.h"
+
 namespace simulation::ui
 {
     inline bool placingBoids{ true };
@@ -48,27 +52,54 @@ namespace simulation::ui
 
     namespace cursors
     {
-        constexpr int cursorSize{ 16 };
+        inline GLFWcursor* whiteCursor{};
+        inline GLFWcursor* redCursor{};
 
         inline void initCursors() {
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
-            unsigned char cursorPixels[cursorSize * cursorSize * 4];
-            for (int i = 0; i < cursorSize * cursorSize; ++i) 
+            const int cursorSize{ static_cast<int>(Camera::screenWidth * (25.0f / 1920.0f)) };
+
+            // White cursor
             {
-                cursorPixels[i * 4 + 0] = 255; // Red
-                cursorPixels[i * 4 + 1] = 0;   // Green
-                cursorPixels[i * 4 + 2] = 0;   // Blue
-                cursorPixels[i * 4 + 3] = 255; // Alpha (fully opaque)
+                std::vector<unsigned char> whiteCursorImage;
+                unsigned int imageWidth, imageHeight;
+                lodepng::decode(whiteCursorImage, imageWidth, imageHeight, "../assets/white_cursor.png");
+                std::vector<unsigned char> whiteCursorResized(cursorSize * cursorSize * 4);
+                stbir_resize_uint8(
+                        whiteCursorImage.data(), imageWidth, imageWidth, 0,
+                        whiteCursorResized.data(), cursorSize, cursorSize, 0, 4
+                );
+
+                GLFWimage whiteCursorGlfwImage;
+                whiteCursorGlfwImage.width = cursorSize;
+                whiteCursorGlfwImage.height = cursorSize;
+                whiteCursorGlfwImage.pixels = whiteCursorResized.data();
+
+                whiteCursor = glfwCreateCursor(&whiteCursorGlfwImage, 7, 0); // hotspot in center
             }
 
-            GLFWimage image;
-            image.width = cursorSize;
-            image.height = cursorSize;
-            image.pixels = cursorPixels;
+            // Red cursor
+            {
+                std::vector<unsigned char> redCursorImage;
+                unsigned int imageWidth, imageHeight;
+                lodepng::decode(redCursorImage, imageWidth, imageHeight, "../assets/red_cursor.png");
+                std::vector<unsigned char> redCursorResized(cursorSize * cursorSize * 4);
+                stbir_resize_uint8(
+                        redCursorImage.data(), imageWidth, imageWidth, 0,
+                        redCursorResized.data(), cursorSize, cursorSize, 0, 4
+                );
 
-            GLFWcursor* redCursor = glfwCreateCursor(&image, cursorSize / 2, cursorSize / 2); // hotspot in center
-            glfwSetCursor(Camera::window, redCursor);
+                GLFWimage redCursorGlfwImage;
+                redCursorGlfwImage.width = cursorSize;
+                redCursorGlfwImage.height = cursorSize;
+                redCursorGlfwImage.pixels = redCursorResized.data();
+
+                redCursor = glfwCreateCursor(&redCursorGlfwImage, 7, 0); // hotspot in center
+            }
+
+            // Set current cursor
+            glfwSetCursor(Camera::window, whiteCursor);
         }
     }
 
