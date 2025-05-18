@@ -11,6 +11,7 @@
 
 #include <array>
 #include <iostream>
+#include <algorithm>
 
 #include "../lodepng.h"
 
