@@ -133,6 +133,8 @@ void simulation::boid::BoidObject::updateBoids(float deltaTime)
         {
             double xCursorPos, yCursorPos;
             glfwGetCursorPos(Camera::window, &xCursorPos, &yCursorPos);
+			xCursorPos *= simulation::ui::cursors::cursorScaleFactor;
+			yCursorPos *= simulation::ui::cursors::cursorScaleFactor;
             const glm::vec2 vecToBoid{ lookAheadPos - glm::vec2{ static_cast<float>(xCursorPos), static_cast<float>(yCursorPos) } };
             const float distance{ glm::length(vecToBoid) };
 

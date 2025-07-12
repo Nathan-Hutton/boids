@@ -53,13 +53,16 @@ namespace simulation::ui
 
     namespace cursors
     {
+		inline double cursorScaleFactor{ 1.0 };
         inline GLFWcursor* whiteCursor{};
         inline GLFWcursor* redCursor{};
 
-        inline void initCursors() {
+        inline void initCursors(float i_cursorScaleFactor) {
+			cursorScaleFactor = i_cursorScaleFactor;
+
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
-            const int cursorSize{ static_cast<int>( Camera::screenWidth * (5.0f / 384.0f) ) };
+            const int cursorSize{ static_cast<int>( (Camera::screenWidth * (5.0f / 384.0f)) / cursorScaleFactor ) };
 
             // White cursor
             {

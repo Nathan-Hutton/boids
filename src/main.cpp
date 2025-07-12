@@ -63,8 +63,6 @@ int main()
     ShaderHandler::shaderProgram = ShaderHandler::compileShader(std::vector<std::string>{"../shaders/shader.vert", "../shaders/shader.frag"});
     glUseProgram(ShaderHandler::shaderProgram);
 
-    simulation::ui::cursors::initCursors();
-
     bool showSettingsUI{ false };
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
 
@@ -89,6 +87,8 @@ int main()
 			cursorScaleFactor = Camera::screenWidth / winW;
 		}
 	}
+
+    simulation::ui::cursors::initCursors(cursorScaleFactor);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -115,8 +115,8 @@ int main()
 
         double xCursorPos, yCursorPos;
         glfwGetCursorPos(window, &xCursorPos, &yCursorPos);
-		xCursorPos *= cursorScaleFactor;
-		yCursorPos *= cursorScaleFactor;
+		xCursorPos *= simulation::ui::cursors::cursorScaleFactor;
+		yCursorPos *= simulation::ui::cursors::cursorScaleFactor;
         if (!io.WantCaptureMouse && processMouseInputClicking(window))
         {
             if (simulation::ui::placingBoids)
