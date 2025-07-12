@@ -67,6 +67,29 @@ int main()
 
     bool showSettingsUI{ false };
     float lastUpdateTime{ static_cast<float>(glfwGetTime()) };
+
+	// This is something I only needed to add after switching to Hyprland. The DPI scaling screws the mouse cursor
+	// pos up with glfwGetCursorPos(). This block calculates that scale factor so we can correct it.
+	double cursorScaleFactor{ 1.0 };
+	{
+		int winW, winH;
+		glfwGetWindowSize(window, &winW, &winH);
+		if (winW != Camera::screenWidth)
+		{
+			// For some reason, a few frames need to be rendered before glfw will give us what it thinks is the correct
+			// window size. This loop renders a few bogus frames to make this happen
+			const int oldWinW{ winW };
+			while (winW == oldWinW)
+			{
+				glfwPollEvents();
+				glfwGetWindowSize(window, &winW, &winH);
+				glfwSwapBuffers(window);
+			}
+
+			cursorScaleFactor = Camera::screenWidth / winW;
+		}
+	}
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -92,6 +115,8 @@ int main()
 
         double xCursorPos, yCursorPos;
         glfwGetCursorPos(window, &xCursorPos, &yCursorPos);
+		xCursorPos *= cursorScaleFactor;
+		yCursorPos *= cursorScaleFactor;
         if (!io.WantCaptureMouse && processMouseInputClicking(window))
         {
             if (simulation::ui::placingBoids)

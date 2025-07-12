@@ -59,7 +59,7 @@ namespace simulation::ui
         inline void initCursors() {
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
-            const int cursorSize{ static_cast<int>(Camera::screenWidth * (25.0f / 1920.0f)) };
+            const int cursorSize{ static_cast<int>( Camera::screenWidth * (5.0f / 384.0f) ) };
 
             // White cursor
             {
