@@ -1,5 +1,6 @@
-# Real-Time Fluid Rendering
+# Boids flocking simulation
 
 ## Video
 
-<a href="https://www.youtube.com/watch?v=AMXlc43AJDk"><img src="boids1.gif"></a>
+[<img src="boids1.gif" width="900"
+/>](https://www.youtube.com/embed/rzK7BJzq90k)
