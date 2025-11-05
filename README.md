@@ -2,5 +2,4 @@
 
 ## Video
 
-[<img src="https://img.youtube.com/vi/rzK7BJzq90k/maxresdefault.jpg" width="900"
-/>](https://www.youtube.com/watch?v=AMXlc43AJDk)
+<a href="https://www.youtube.com/watch?v=AMXlc43AJDk"><img src="boids1.gif"></a>
